@@ -64,7 +64,7 @@ export async function refreshBadge(records = null, now = Date.now()) {
   const hasDue = Boolean(selectNextDue(currentRecords, now));
   await chrome.action.setBadgeBackgroundColor({ color: hasDue ? '#F18F6D' : '#00000000' });
   await chrome.action.setBadgeText({ text: hasDue ? '●' : '' });
-  await chrome.action.setTitle({ title: hasDue ? '有一份文档想见你' : '打开 12730' });
+  await chrome.action.setTitle({ title: hasDue ? '有一份文档想见你' : '打开一点' });
 }
 
 function requestBadgeRefresh(records = null) {
@@ -96,7 +96,7 @@ async function setTabInjectionError(tabId) {
   await Promise.allSettled([
     chrome.action.setBadgeBackgroundColor({ tabId, color: '#D64545' }),
     chrome.action.setBadgeText({ tabId, text: '!' }),
-    chrome.action.setTitle({ tabId, title: '请在普通网页中使用 12730' }),
+    chrome.action.setTitle({ tabId, title: '请在普通网页中使用一点' }),
   ]);
 }
 
@@ -111,7 +111,7 @@ async function clearTabInjectionError(tabId) {
 async function showPetOnTab(tab, mode = 'current') {
   if (!tab?.id || !tab?.url || !isWebUrl(tab.url)) {
     await setTabInjectionError(tab?.id);
-    throw new Error('请在普通网页中使用 12730');
+    throw new Error('请在普通网页中使用一点');
   }
   const message = { type: 'show-pet', mode };
   try {

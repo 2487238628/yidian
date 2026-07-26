@@ -12,6 +12,7 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(frontMatter, /^entry_file: index\.html$/m);
   assert.match(frontMatter, /^license: MIT License$/m);
   assert.match(html, /<html lang="zh-CN">/);
+  assert.match(html, /<title>一点 · 12730 文档回访伙伴<\/title>/);
   assert.match(html, /12730-extension-unpacked\.zip/);
   assert.match(html, /不读取正文，不上传记录，不要求登录/);
   await Promise.all(['index.html','styles.css','app.js','icon.png','12730-extension-unpacked.zip'].map((file) => access(new URL(file, studio))));

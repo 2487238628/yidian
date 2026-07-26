@@ -21,7 +21,7 @@ function render() {
   document.querySelector('#demo-eyebrow').textContent = current.eyebrow;
   document.querySelector('#progress-copy').textContent = current.copy;
   advance.textContent = current.button;
-  pet.setAttribute('aria-label', `可拖动的 12730 宠物，当前进度 ${current.percent}%`);
+  pet.setAttribute('aria-label', `可拖动的一点宠物，当前进度 ${current.percent}%`);
   document.querySelectorAll('.rhythm li').forEach((item) => item.classList.toggle('done', Number(item.dataset.step) <= stage));
 }
 

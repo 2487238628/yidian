@@ -169,7 +169,7 @@ test('受保护页面显示当前标签专属错误 badge 和标题', async () =
   state.listeners.action({ id: 77, windowId: 1, title: '扩展管理', url: 'chrome://extensions/' });
   await new Promise((resolve) => setTimeout(resolve, 15));
   assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.tabId === 77 && value.text === '!'));
-  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.tabId === 77 && value.title === '请在普通网页中使用 12730'));
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.tabId === 77 && value.title === '请在普通网页中使用一点'));
 });
 
 test('普通网页注入失败也显示当前标签专属可见反馈', async () => {
@@ -178,7 +178,7 @@ test('普通网页注入失败也显示当前标签专属可见反馈', async ()
   state.listeners.action(tabA);
   await new Promise((resolve) => setTimeout(resolve, 15));
   assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.tabId === tabA.id && value.text === '!'));
-  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.tabId === tabA.id && value.title === '请在普通网页中使用 12730'));
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.tabId === tabA.id && value.title === '请在普通网页中使用一点'));
 });
 
 test('打开记录拒绝非 http/https 协议', async () => {

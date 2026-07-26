@@ -6,7 +6,7 @@
   const root = document.createElement('div');
   root.id = ROOT_ID;
   root.innerHTML = `
-    <div id="otter-12730-pet" data-stage="0" role="button" tabindex="0" aria-label="打开 12730 文档伙伴">
+    <div id="otter-12730-pet" data-stage="0" role="button" tabindex="0" aria-label="打开一点文档伙伴">
       <div id="otter-12730-body"><div id="otter-12730-liquid"></div><div id="otter-12730-face"><i id="otter-12730-mouth"></i></div></div>
       <div id="otter-12730-feet"><i></i><i></i></div>
     </div>
