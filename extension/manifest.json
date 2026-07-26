@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "12730 · 文档回访伙伴",
+  "version": "0.4.0",
+  "description": "先做一点，就已经完成了四分之一。",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "alarms", "scripting", "storage"],
+  "background": { "service_worker": "service-worker.mjs", "type": "module" },
+  "icons": { "16": "icons/icon.png", "32": "icons/icon.png", "48": "icons/icon.png", "128": "icons/icon.png" },
+  "action": { "default_title": "唤出 12730 宠物", "default_icon": "icons/icon.png" },
+  "options_ui": { "page": "library.html", "open_in_tab": true },
+  "commands": {
+    "open-current-document": {
+      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
+      "description": "在当前网页 Mark 当前文档"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "12730-revisit-companion",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --test && node --check extension/domain.mjs && node --check extension/pet.js && node --check extension/service-worker.mjs && node --check extension/library.js"
+  }
+}
