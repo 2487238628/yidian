@@ -7,7 +7,10 @@ const read = (file) => readFile(new URL(file, studio), 'utf8');
 
 test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   const [readme, html] = await Promise.all([read('README.md'), read('index.html')]);
-  assert.match(readme, /^---\nsdk: static\nentry_file: index\.html\n---/);
+  const frontMatter = readme.replaceAll('\r\n', '\n').match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
+  assert.match(frontMatter, /^sdk: static$/m);
+  assert.match(frontMatter, /^entry_file: index\.html$/m);
+  assert.match(frontMatter, /^license: MIT License$/m);
   assert.match(html, /<html lang="zh-CN">/);
   assert.match(html, /12730-extension-unpacked\.zip/);
   assert.match(html, /不读取正文，不上传记录，不要求登录/);
