@@ -1,5 +1,11 @@
 ---
 sdk: static
+license: MIT License
+tags:
+  - productivity
+  - learning
+  - knowledge-management
+  - browser-extension
 entry_file: index.html
 ---
 
