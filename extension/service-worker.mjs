@@ -194,11 +194,16 @@ function normalizeImportedRecord(record, now = Date.now()) {
   const stage = Number(record.stage);
   if (!Number.isInteger(stage) || stage < 1 || stage > MAX_STAGE) throw new TypeError('备份中的进度无效');
   const url = String(record.url || '');
+  const title = String(record.title || '').trim();
+  const skinId = String(record.skinId || 'fluid-01');
+  if (url.length > 4096 || title.length > 500 || skinId.length > 64) {
+    throw new TypeError('备份中的文本字段过长');
+  }
   const normalizedUrl = normalizeUrl(url);
   const completedAt = Number.isFinite(record.completedAt) ? record.completedAt : now;
   const createdAt = Number.isFinite(record.createdAt) ? record.createdAt : completedAt;
   return {
-    title: String(record.title || '').trim() || sourceDomain(url),
+    title: title || sourceDomain(url),
     url,
     normalizedUrl,
     sourceDomain: sourceDomain(url),
@@ -209,7 +214,7 @@ function normalizeImportedRecord(record, now = Date.now()) {
       : (Number.isFinite(record.nextReviewAt) ? record.nextReviewAt : nextReviewAtFor(stage, completedAt)),
     createdAt,
     updatedAt: Number.isFinite(record.updatedAt) ? record.updatedAt : completedAt,
-    skinId: String(record.skinId || 'fluid-01'),
+    skinId,
   };
 }
 
@@ -238,6 +243,7 @@ async function setReducedMotion(value) {
 }
 
 export async function handleMessage(message) {
+  if (!message || typeof message !== 'object') return { ok: false, error: '无效操作' };
   if (message.type === 'get-pet-state') {
     const [records, settings] = await Promise.all([getRecords(), getSettings()]);
     const normalized = normalizeUrl(message.page.url);

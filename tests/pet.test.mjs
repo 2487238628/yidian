@@ -52,7 +52,7 @@ class FakeElement {
   }
   addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
   dispatch(type, props = {}) {
-    const event = { preventDefault() {}, target: this, ...props };
+    const event = { preventDefault() {}, target: this, isTrusted: true, ...props };
     for (const fn of this.listeners[type] ?? []) fn(event);
   }
   setPointerCapture(id) { this.captured.add(id); }
@@ -289,4 +289,16 @@ test('卡片把删除移到记录页并提供全部记录入口', async () => {
   harness.hook.card.dispatch('click', { target: button });
   await harness.flush();
   assert.ok(harness.sent.some((item) => item.type === 'open-library'));
+});
+
+test('宿主网页伪造的按钮点击不能修改扩展记录', async () => {
+  const harness = createHarness();
+  await harness.flush();
+  const before = harness.sent.length;
+  const button = new FakeElement('host-forged-button');
+  button.dataset.action = 'mark';
+  harness.hook.card.dispatch('click', { target: button, isTrusted: false });
+  await harness.flush();
+  assert.equal(harness.sent.length, before);
+  assert.equal(harness.sent.some((item) => item.type === 'mark-current'), false);
 });

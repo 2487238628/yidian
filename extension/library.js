@@ -76,6 +76,11 @@ document.querySelector('#export').addEventListener('click', async () => {
 document.querySelector('#import').addEventListener('change', async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
+  if (file.size > 5_000_000) {
+    showError(new Error('备份文件不能超过 5 MB'));
+    event.target.value = '';
+    return;
+  }
   try {
     const payload = JSON.parse(await file.text());
     const result = await send({ type:'import-records', records:payload.records ?? payload });

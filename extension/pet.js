@@ -131,6 +131,7 @@
   }
 
   card.addEventListener('click', (event) => {
+    if (!event.isTrusted) return;
     const button = event.target.closest('button[data-action]');
     if (button) act(button.dataset.action);
   });

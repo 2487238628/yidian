@@ -239,3 +239,27 @@ test('备份导入限制为五千份', async () => {
     /备份文件/,
   );
 });
+
+test('消息入口拒绝空消息，导入字段过长时不覆盖数据', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('security-boundaries');
+  assert.deepEqual(await handleMessage(null), { ok:false, error:'无效操作' });
+  await handleMessage({ type:'mark-current', tab:tabA });
+  const before = structuredClone(state.local.records);
+  await assert.rejects(
+    handleMessage({
+      type:'import-records',
+      records:[{
+        title:'x'.repeat(501),
+        url:'https://safe.example/doc',
+        stage:1,
+        completedAt:Date.now(),
+        nextReviewAt:Date.now() + 1,
+        createdAt:Date.now(),
+        updatedAt:Date.now(),
+      }],
+    }),
+    /字段过长/,
+  );
+  assert.deepEqual(state.local.records, before);
+});

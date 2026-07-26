@@ -29,4 +29,7 @@ test('创空间不依赖远程脚本、字体或追踪器', async () => {
   const html = await read('index.html');
   assert.doesNotMatch(html, /<(?:script|link)[^>]+https?:\/\//i);
   assert.doesNotMatch(html, /analytics|segment|sentry|gtag/i);
+  assert.match(html, /Content-Security-Policy/);
+  assert.match(html, /script-src 'self'/);
+  assert.doesNotMatch(html, /unsafe-inline|unsafe-eval/);
 });
