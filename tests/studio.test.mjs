@@ -48,13 +48,14 @@ test('作者与联系页区分反馈、社群和作者入口', async () => {
   assert.match(html, /id="community"/);
   assert.match(html, /终树 endTree/);
   assert.match(html, /github\.com\/2487238628/);
-  assert.match(html, /2487238628\.github\.io\/yidian/);
   assert.match(html, /docs\.qq\.com\/form\/page\/DZE9LR0hwVkRyemZn/);
   assert.match(html, /写下你在意的这一点/);
-  assert.match(html, /有了去向，我会在更新记录里带回来/);
+  assert.match(html, /需要登录后填写/);
   assert.match(html, /xiaohongshu-endtree\.jpg/);
   assert.match(html, /1052658250/);
-  assert.match(html, /群入口待开放/);
+  assert.match(html, /先在小红书见面/);
+  assert.match(html, /不同时维护微信群和飞书群/);
+  assert.match(html, /id="social"/);
   await access(new URL('xiaohongshu-endtree.jpg', studio));
 });
 test('GitHub 反馈入口区分使用问题和功能建议', async () => {
