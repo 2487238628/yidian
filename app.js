@@ -1,8 +1,8 @@
 const stages = [
   { percent:0, eyebrow:'今天先见一面', copy:'先做一点，就已经开始', button:'今天见过了 · 收下 25%' },
-  { percent:25, eyebrow:'已经开始了', copy:'第 1 次相见', button:'模拟 1 天后的回访' },
-  { percent:50, eyebrow:'你又回来了一次', copy:'第 2 次相见', button:'模拟 7 天后的回访' },
-  { percent:75, eyebrow:'重要的东西正在留下', copy:'第 3 次相见', button:'模拟 30 天后的回访' },
+  { percent:25, eyebrow:'已经开始了', copy:'第 1 次相见', button:'看看 1 天后' },
+  { percent:50, eyebrow:'你又回来了一次', copy:'第 2 次相见', button:'看看 7 天后' },
+  { percent:75, eyebrow:'重要的东西正在留下', copy:'第 3 次相见', button:'看看 30 天后' },
   { percent:100, eyebrow:'四次相见，刚刚好', copy:'它已经长成了', button:'重新体验' },
 ];
 
