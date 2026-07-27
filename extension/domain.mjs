@@ -27,7 +27,7 @@ export function fallbackTitle(rawUrl, now = Date.now()) {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
     timeZone: 'Asia/Shanghai'
   }).format(new Date(now));
-  return `${sourceDomain(rawUrl)} · ${stamp} Mark`;
+  return `${sourceDomain(rawUrl)} · ${stamp} 收藏`;
 }
 
 export function nextReviewAtFor(stage, completedAt) {

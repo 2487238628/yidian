@@ -300,7 +300,7 @@ test('工具栏 show-pet 消息会直接打开收藏卡片', async () => {
   listener({ type: 'show-pet', mode: 'current' });
   await harness.flush();
   assert.equal(harness.hook.card.hidden, false);
-  assert.match(harness.hook.card.innerHTML, /Mark 一下/);
+  assert.match(harness.hook.card.innerHTML, /收下这条/);
 });
 
 test('卡片把删除移到记录页并提供全部记录入口', async () => {

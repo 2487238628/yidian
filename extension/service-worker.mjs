@@ -221,7 +221,7 @@ function normalizeImportedRecord(record, now = Date.now()) {
 }
 
 async function importRecords(rawRecords) {
-  if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的 12730 备份文件');
+  if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的一点备份文件');
   const incoming = rawRecords.map((record) => normalizeImportedRecord(record));
   return enqueueRecordsMutation(async () => {
     const current = await getRecords();

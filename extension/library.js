@@ -29,7 +29,7 @@ function render(records) {
   if (!records.length) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = '还没有收藏。去任意网页唤出宠物，Mark 一下就已经完成 25%。';
+    empty.textContent = '还没有收藏。去任意网页唤出宠物，收下一条就已经完成 25%。';
     recordsRoot.append(empty);
     return;
   }
@@ -68,7 +68,7 @@ document.querySelector('#export').addEventListener('click', async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `12730-backup-${new Date().toISOString().slice(0,10)}.json`;
+    link.download = `yidian-backup-${new Date().toISOString().slice(0,10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
     status.textContent = `已导出 ${records.length} 份记录`;

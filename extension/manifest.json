@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "一点 · 重要的，不只见一次",
+  "name": "一点｜收藏回看工具",
   "version": "1.0.0",
-  "description": "把工作和学习中 Mark 的重要内容，按 1、2、7、30 天重新带到面前。",
+  "description": "把工作和学习中收藏的重要内容，按 1、2、7、30 天重新带到面前。",
   "minimum_chrome_version": "116",
   "permissions": ["activeTab", "alarms", "scripting", "storage"],
   "background": { "service_worker": "service-worker.mjs", "type": "module" },
@@ -12,7 +12,7 @@
   "commands": {
     "open-current-document": {
       "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
-      "description": "Mark 当前网页或选中的一段"
+      "description": "收下当前网页或选中的一段"
     }
   }
 }

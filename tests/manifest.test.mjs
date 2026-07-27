@@ -7,7 +7,7 @@ const manifest = JSON.parse(await readFile(new URL('../extension/manifest.json',
 test('Manifest V3 且权限严格等于网页宠物允许列表', () => {
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.version, '1.0.0');
-  assert.equal(manifest.name, '一点 · 重要的，不只见一次');
+  assert.equal(manifest.name, '一点｜收藏回看工具');
   assert.deepEqual([...manifest.permissions].sort(), ['activeTab','alarms','scripting','storage'].sort());
   assert.equal('host_permissions' in manifest, false);
   assert.equal('content_scripts' in manifest, false);

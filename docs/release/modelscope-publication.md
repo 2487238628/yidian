@@ -4,7 +4,7 @@
 
 - 英文名称：`yidian`
 - 中文名称：`一点`
-- 简介：`把工作和学习中 Mark 的重要内容，按 1、2、7、30 天重新带到面前。`
+- 简介：`把工作和学习中收藏的重要内容，按 1、2、7、30 天重新带到面前。`
 - SDK：`Static`
 - 入口文件：`index.html`
 - 可见性：`公开`
@@ -14,14 +14,14 @@
 
 ## 可直接发布的内容
 
-GitHub 发布分支：`codex/12730-modelscope`
+GitHub 发布分支：`codex/12730-next-gen`
 
 该分支根目录严格包含：
 
 - `README.md`：ModelScope Studio Card，声明 `sdk: static` 与 `entry_file: index.html`
 - `index.html`、`styles.css`、`app.js`：无外部依赖的互动演示
 - `icon.png`
-- `12730-extension-unpacked.zip`：Edge 扩展下载包，ZIP 根目录直接包含 `manifest.json`
+- `yidian-1.0.0.zip`：Chrome / Edge 浏览器扩展下载包，ZIP 根目录直接包含 `manifest.json`
 
 ## 发布方式
 
