@@ -48,6 +48,7 @@ test('作者与联系页区分反馈、社群和作者入口', async () => {
   assert.match(html, /id="community"/);
   assert.match(html, /终树 endTree/);
   assert.match(html, /github\.com\/2487238628/);
+  assert.match(html, /2487238628\.github\.io\/yidian/);
   assert.match(html, /docs\.qq\.com\/form\/page\/DZE9LR0hwVkRyemZn/);
   assert.match(html, /写下你在意的这一点/);
   assert.match(html, /有了去向，我会在更新记录里带回来/);
