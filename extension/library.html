@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>一点 · 我的回访</title>
+  <title>一点 · 我的收藏</title>
   <link rel="stylesheet" href="library.css">
 </head>
 <body>
   <main>
     <header>
       <div>
-        <p class="eyebrow">一点 · 12730 文档回访伙伴</p>
-        <h1>我的回访</h1>
-        <p class="intro">先开始，再在 1、2、7、30 天轻轻回来。</p>
+        <p class="eyebrow">一点 · 重要的，不只见一次</p>
+        <h1>我的收藏</h1>
+        <p class="intro">把工作和学习中 Mark 的重要内容，按第 2、7、30 天重新带到面前。</p>
       </div>
       <div class="tools" aria-label="记录工具">
         <button id="export" type="button">导出备份</button>
@@ -22,13 +22,13 @@
     </header>
 
     <section class="summary" aria-label="回访概览">
-      <div><strong id="total">0</strong><span>份记录</span></div>
-      <div><strong id="due">0</strong><span>今天可回访</span></div>
+      <div><strong id="total">0</strong><span>条收藏</span></div>
+      <div><strong id="due">0</strong><span>今天可回来</span></div>
       <div><strong id="complete">0</strong><span>已经长成</span></div>
     </section>
 
     <p id="status" role="status" aria-live="polite"></p>
-    <section id="records" class="records" aria-label="文档记录"></section>
+    <section id="records" class="records" aria-label="收藏记录"></section>
   </main>
   <template id="record-template">
     <article class="record">
@@ -36,10 +36,11 @@
         <p class="record-state"></p>
         <h2></h2>
         <p class="record-meta"></p>
+        <p class="record-excerpt" hidden></p>
       </div>
       <div class="progress" aria-label="回访进度"><span></span></div>
       <div class="record-actions">
-        <button class="open" type="button">打开原文</button>
+        <button class="open" type="button">打开收藏来源</button>
         <button class="delete" type="button">删除</button>
       </div>
     </article>

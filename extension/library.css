@@ -21,6 +21,7 @@ h1 { margin:0; font-size:clamp(32px,6vw,56px); line-height:1; letter-spacing:-.0
 .record-state { margin:0 0 4px; color:#2e7e69; font-size:12px; font-weight:800; }
 .record h2 { margin:0; font-size:17px; overflow-wrap:anywhere; }
 .record-meta { margin:6px 0 0; color:#667670; font-size:12px; }
+.record-excerpt { margin:10px 0 0; color:#42524d; font-size:13px; line-height:1.5; }
 .progress { height:10px; overflow:hidden; border-radius:999px; background:#e6efeb; }
 .progress span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#91d3bd,#69b59d); }
 .record-actions { display:flex; gap:8px; }

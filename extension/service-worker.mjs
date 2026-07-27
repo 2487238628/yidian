@@ -1,5 +1,5 @@
 import {
-  advanceRecord, createRecord, MAX_STAGE, nextReviewAtFor, normalizeUrl, selectNextDue,
+  advanceRecord, createRecord, MAX_EXCERPT_LENGTH, MAX_STAGE, nextReviewAtFor, normalizeUrl, selectNextDue,
   sourceDomain, upsertByNormalizedUrl, updateRecordUrl
 } from './domain.mjs';
 
@@ -64,7 +64,7 @@ export async function refreshBadge(records = null, now = Date.now()) {
   const hasDue = Boolean(selectNextDue(currentRecords, now));
   await chrome.action.setBadgeBackgroundColor({ color: hasDue ? '#F18F6D' : '#00000000' });
   await chrome.action.setBadgeText({ text: hasDue ? '●' : '' });
-  await chrome.action.setTitle({ title: hasDue ? '有一份文档想见你' : '打开一点' });
+  await chrome.action.setTitle({ title: hasDue ? '有一份收藏想见你' : '打开一点' });
 }
 
 function requestBadgeRefresh(records = null) {
@@ -137,7 +137,7 @@ async function refreshInjectedPets() {
 async function markCurrent(tab) {
   return enqueueRecordsMutation(async () => {
     const records = await getRecords();
-    const incoming = createRecord({ title: tab.title, url: tab.url });
+    const incoming = createRecord({ title: tab.title, url: tab.url, excerpt: tab.excerpt });
     const result = upsertByNormalizedUrl(records, incoming);
     if (result.created) await saveRecords(result.records);
     await syncDerivedState(result.records);
@@ -195,8 +195,9 @@ function normalizeImportedRecord(record, now = Date.now()) {
   if (!Number.isInteger(stage) || stage < 1 || stage > MAX_STAGE) throw new TypeError('备份中的进度无效');
   const url = String(record.url || '');
   const title = String(record.title || '').trim();
+  const excerpt = String(record.excerpt || '').trim();
   const skinId = String(record.skinId || 'fluid-01');
-  if (url.length > 4096 || title.length > 500 || skinId.length > 64) {
+  if (url.length > 4096 || title.length > 500 || excerpt.length > MAX_EXCERPT_LENGTH || skinId.length > 64) {
     throw new TypeError('备份中的文本字段过长');
   }
   const normalizedUrl = normalizeUrl(url);
@@ -204,6 +205,7 @@ function normalizeImportedRecord(record, now = Date.now()) {
   const createdAt = Number.isFinite(record.createdAt) ? record.createdAt : completedAt;
   return {
     title: title || sourceDomain(url),
+    excerpt,
     url,
     normalizedUrl,
     sourceDomain: sourceDomain(url),

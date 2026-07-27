@@ -1,5 +1,6 @@
 export const DAY_MS = 86_400_000;
 export const MAX_STAGE = 4;
+export const MAX_EXCERPT_LENGTH = 1_000;
 export const STAGE_PERCENT = Object.freeze({ 1: 25, 2: 50, 3: 75, 4: 100 });
 const NEXT_INTERVAL_DAYS = Object.freeze({ 1: 1, 2: 5, 3: 23 });
 
@@ -34,10 +35,11 @@ export function nextReviewAtFor(stage, completedAt) {
   return days ? completedAt + days * DAY_MS : null;
 }
 
-export function createRecord({ title, url, now = Date.now(), skinId = 'fluid-01' }) {
+export function createRecord({ title, url, excerpt = '', now = Date.now(), skinId = 'fluid-01' }) {
   const normalizedUrl = normalizeUrl(url);
   return {
     title: String(title || '').trim() || fallbackTitle(url, now),
+    excerpt: String(excerpt || '').trim().slice(0, MAX_EXCERPT_LENGTH),
     url,
     normalizedUrl,
     sourceDomain: sourceDomain(url),

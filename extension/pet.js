@@ -6,7 +6,7 @@
   const root = document.createElement('div');
   root.id = ROOT_ID;
   root.innerHTML = `
-    <div id="otter-12730-pet" data-stage="0" role="button" tabindex="0" aria-label="打开一点文档伙伴">
+    <div id="otter-12730-pet" data-stage="0" role="button" tabindex="0" aria-label="打开一点">
       <div id="otter-12730-body"><div id="otter-12730-liquid"></div><div id="otter-12730-face"><i id="otter-12730-mouth"></i></div></div>
       <div id="otter-12730-feet"><i></i><i></i></div>
     </div>
@@ -34,7 +34,8 @@
   let toastTimer = null;
 
   function page() {
-    return { title: document.title || '', url: location.href };
+    const excerpt = String(globalThis.getSelection?.()?.toString() ?? '').trim().slice(0, 1000);
+    return { title: document.title || '', url: location.href, ...(excerpt ? { excerpt } : {}) };
   }
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -80,16 +81,17 @@
     const record = state?.record ?? null;
     const due = Boolean(state?.isDue);
     const stage = record?.stage ?? 0;
+    const excerpt = record?.excerpt || page().excerpt || '';
     pet.dataset.stage = String(stage);
     liquid.style.setProperty('--fill', `${progress(stage)}%`);
     liquid.style.height = `${progress(stage)}%`;
     const domain = location.hostname.replace(/^www\./,'') || '当前页面';
     if (!record) {
-      card.innerHTML = `<p class="o-eyebrow">今天先见一面</p><h2 class="o-title">${escapeHtml(document.title || domain)}</h2><p class="o-meta">${escapeHtml(domain)}</p><div class="o-progress"><strong>0%</strong><span>先做一点，就已经开始</span></div><div class="o-actions"><button class="o-primary" data-action="mark">今天见过了 · 收下 25%</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部记录</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
+      card.innerHTML = `<p class="o-eyebrow">重要的，不只见一次</p><h2 class="o-title">${escapeHtml(document.title || domain)}</h2><p class="o-meta">${escapeHtml(domain)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>0%</strong><span>Mark 一下，以后再见</span></div><div class="o-actions"><button class="o-primary" data-action="mark">Mark 一下 · 收下 25%</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
     } else {
-      const label = stage === 4 ? '已经长成' : due ? '它把原文带回来了' : '陪你等下一次相见';
-      const next = stage === 4 ? '四次相见，刚刚好。' : due ? '今天可以完成这次回访' : `下次见面：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
-      card.innerHTML = `<p class="o-eyebrow">${label}</p><h2 class="o-title">${escapeHtml(record.title)}</h2><p class="o-meta">${escapeHtml(record.sourceDomain)} · ${escapeHtml(next)}</p><div class="o-progress"><strong>${progress(stage)}%</strong><span>第 ${stage} 次相见</span></div><div class="o-actions">${due ? '<button class="o-primary" data-action="review">这次看完了</button>' : ''}<button data-action="open">打开原文</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部记录</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
+      const label = stage === 4 ? '已经长成' : due ? '重要内容回来了' : '陪你等它再回来';
+      const next = stage === 4 ? '四次相见，刚刚好。' : due ? '今天可以回来一次' : `下次回来：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
+      card.innerHTML = `<p class="o-eyebrow">${label}</p><h2 class="o-title">${escapeHtml(record.title)}</h2><p class="o-meta">${escapeHtml(record.sourceDomain)} · ${escapeHtml(next)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>${progress(stage)}%</strong><span>第 ${stage} 次相见</span></div><div class="o-actions">${due ? '<button class="o-primary" data-action="review">这次回来了</button>' : ''}<button data-action="open">打开收藏来源</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
     }
     positionCard();
   }
@@ -98,7 +100,7 @@
       if (action === 'hide') { root.hidden = true; card.hidden = true; return; }
       if (action === 'mark') {
         const result = await send({ type:'mark-current', tab:page() });
-        showToast(result.created ? '已经开始了。宠物长到 25%。' : '这份文档已经 Mark 过了。');
+        showToast(result.created ? '已经收下。宠物长到 25%。' : '这页已经收过了。');
       }
       if (action === 'review') {
         const result = await send({ type:'complete-review', normalizedUrl:state.record.normalizedUrl });
@@ -176,6 +178,7 @@
     if (message.type === 'show-pet') {
       mode = message.mode === 'review' ? 'review' : 'current';
       root.hidden = false;
+      card.hidden = false;
       load().catch(() => {});
     }
     if (message.type === 'refresh-pet') load().catch(() => {});
@@ -202,5 +205,5 @@
     snapshot: () => ({ x, y, dragging, moved, pointerId, idleUntil, mode }),
   });
   requestAnimationFrame(roam);
-  load().catch((error) => showToast(error.message || '无法读取这份文档'));
+  load().catch((error) => showToast(error.message || '无法读取当前页面'));
 })();

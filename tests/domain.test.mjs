@@ -17,6 +17,14 @@ test('Mark 立即得到 25%，一天后到期', () => {
   assert.equal(record.nextReviewAt, T0 + DAY_MS);
 });
 
+test('Mark 保存选中文本并限制收藏上下文长度', () => {
+  const record = createRecord({
+    title: '文档', url: 'https://example.com/doc', excerpt: `  ${'x'.repeat(1_001)}  `, now: T0,
+  });
+  assert.equal(record.excerpt.length, 1_000);
+  assert.equal(record.excerpt, 'x'.repeat(1_000));
+});
+
 test('正常 1/2/7/30 节奏对应 25/50/75/100', () => {
   let record = marked();
   const day2 = T0 + DAY_MS;

@@ -12,12 +12,12 @@ async function send(message) {
 function stateLabel(record, now = Date.now()) {
   if (record.stage === 4) return '已经长成 · 100%';
   if (record.nextReviewAt <= now) return `今天可以回来 · ${progress(record.stage)}%`;
-  return `等待下一次相见 · ${progress(record.stage)}%`;
+  return `等它再回来 · ${progress(record.stage)}%`;
 }
 
 function nextLabel(record) {
   if (record.stage === 4) return '四次相见，刚刚好';
-  return `下次相见：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
+  return `下次回来：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
 }
 
 function render(records) {
@@ -29,7 +29,7 @@ function render(records) {
   if (!records.length) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = '还没有记录。去任意网页唤出宠物，Mark 一下就已经完成 25%。';
+    empty.textContent = '还没有收藏。去任意网页唤出宠物，Mark 一下就已经完成 25%。';
     recordsRoot.append(empty);
     return;
   }
@@ -39,8 +39,10 @@ function render(records) {
     node.querySelector('.record-state').textContent = stateLabel(record, now);
     node.querySelector('h2').textContent = record.title;
     node.querySelector('.record-meta').textContent = `${record.sourceDomain} · ${nextLabel(record)}`;
+    const excerpt = node.querySelector('.record-excerpt');
+    if (record.excerpt) { excerpt.textContent = `“${record.excerpt}”`; excerpt.hidden = false; }
     node.querySelector('.progress span').style.width = `${progress(record.stage)}%`;
-    node.querySelector('.progress').setAttribute('aria-label', `回访进度 ${progress(record.stage)}%`);
+    node.querySelector('.progress').setAttribute('aria-label', `回来进度 ${progress(record.stage)}%`);
     node.querySelector('.open').addEventListener('click', () => send({ type:'open-record', url:record.url }).catch(showError));
     node.querySelector('.delete').addEventListener('click', async () => {
       if (!confirm(`删除“${record.title}”的本地记录？`)) return;

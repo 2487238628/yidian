@@ -105,6 +105,14 @@ test('并发 Mark A、B 完整串行读改写并保留两条记录', async () =>
   assert.deepEqual(state.local.records.map((record) => record.title).sort(), ['A', 'B']);
 });
 
+test('Mark 会把用户主动选择的文本写入本地记录', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('mark-excerpt');
+  const result = await handleMessage({ type: 'mark-current', tab: { ...tabA, excerpt: '关键段落' } });
+  assert.equal(result.record.excerpt, '关键段落');
+  assert.equal(state.local.records[0].excerpt, '关键段落');
+});
+
 test('并发完成同一回访只能推进一级', async () => {
   const state = chromeMock();
   const { handleMessage } = await loadWorker('reviews');

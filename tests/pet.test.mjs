@@ -80,7 +80,7 @@ class FakeElement {
   }
 }
 
-function createHarness({ reducedMotion = false, record = null, due = false } = {}) {
+function createHarness({ reducedMotion = false, record = null, due = false, selection = '' } = {}) {
   const viewport = { width: 1280, height: 720 };
   const elements = new Map();
   const appended = [];
@@ -141,6 +141,7 @@ function createHarness({ reducedMotion = false, record = null, due = false } = {
     performance: { now: () => 1_000 },
     requestAnimationFrame(fn) { raf.push(fn); return raf.length; },
     setInterval() { return 1; }, setTimeout(fn) { fn(); return 1; }, clearTimeout() {},
+    getSelection: () => ({ toString: () => selection }),
     addEventListener() {}, matchMedia: () => ({ matches: false }),
     getComputedStyle(element) {
       const hostStyle = { margin: '64px', padding: '20px', opacity: '0.8', boxSizing: 'content-box', display: element.hidden ? 'none' : 'block', visibility: 'visible' };
@@ -277,6 +278,29 @@ test('Mark 点击时读取 SPA 路由最新标题和 URL', async () => {
   const message = harness.sent.findLast((item) => item.type === 'mark-current');
   assert.deepEqual(message.tab, { title: 'Notion 新页面', url: 'https://www.notion.so/workspace/new-page' });
   assert.equal('operationId' in message, false);
+});
+
+test('选中文本会显示并随 Mark 保存为收藏上下文', async () => {
+  const harness = createHarness({ selection: '  一段值得再见的内容  ' });
+  await harness.flush();
+  assert.match(harness.hook.card.innerHTML, /一段值得再见的内容/);
+  const button = new FakeElement('mark-button');
+  button.dataset.action = 'mark';
+  harness.hook.card.dispatch('click', { target: button });
+  await harness.flush();
+  const message = harness.sent.findLast((item) => item.type === 'mark-current');
+  assert.equal(message.tab.excerpt, '一段值得再见的内容');
+});
+
+test('工具栏 show-pet 消息会直接打开收藏卡片', async () => {
+  const harness = createHarness();
+  await harness.flush();
+  harness.hook.card.hidden = true;
+  const listener = harness.runtimeListeners[0];
+  listener({ type: 'show-pet', mode: 'current' });
+  await harness.flush();
+  assert.equal(harness.hook.card.hidden, false);
+  assert.match(harness.hook.card.innerHTML, /Mark 一下/);
 });
 
 test('卡片把删除移到记录页并提供全部记录入口', async () => {
