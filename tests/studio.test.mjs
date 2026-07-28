@@ -31,9 +31,10 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /数字表示待回看的收藏数量。不弹窗，不催促；你点开时，一次带回一条。/);
   assert.match(html, /class="github-invite"[^>]*>[\s\S]*让一点继续长大[\s\S]*去点亮 Star ↗/);
   assert.match(html, /先把一点<br>放进浏览器。/);
-  assert.match(html, /下载一点/);
+  assert.match(html, /microsoftedge\.microsoft\.com\/addons\/detail\/mdpemepjnajchhlagfkpggenllebeacd/);
+  assert.match(html, /Chrome：下载 ZIP 手动安装/);
   assert.match(html, /class="privacy-link" href="privacy\.html">查看完整隐私政策 →<\/a>/);
-  assert.match(html, /Chrome、Edge 电脑版/);
+  assert.match(html, /Edge 商店已上线 · Chrome 可手动安装/);
   assert.match(html, /href="contact\.html"/);
   assert.doesNotMatch(html, /Codex|艺术与文化管理研究者|任何浏览器/);
   await Promise.all(['index.html','contact.html','changelog.html','privacy.html','styles.css','app.js','icon.png','yidian-1.0.0.zip'].map((file) => access(new URL(file, studio))));

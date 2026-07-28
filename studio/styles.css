@@ -95,6 +95,7 @@ h2 { margin:0; font-size:clamp(34px,5vw,64px); line-height:1.1; letter-spacing:-
 .download-card { display:grid; gap:12px; margin-top:26px; padding:22px; border:1px solid var(--line); border-radius:22px; background:var(--white); box-shadow:0 16px 38px rgba(32,51,45,.08); }
 .download-card>span,.download-card small { color:#74827c; font-size:12px; font-weight:750; }
 .download-card .primary { justify-content:center; width:100%; margin:0; }
+.download-card .secondary { width:100%; }
 .github-invite { display:grid; grid-template-columns:30px 1fr; gap:10px 12px; align-items:center; margin-top:12px; padding:17px 18px; border:1px solid rgba(242,140,104,.45); border-radius:18px; background:#fffaf3; }
 .github-invite>span:first-child { color:var(--peach); font-size:26px; line-height:1; }
 .github-invite strong,.github-invite small { display:block; }
