@@ -1,9 +1,9 @@
 const stages = [
-  { percent:0, eyebrow:'今天先见一面', copy:'先做一点，就已经开始', button:'今天见过了 · 收下 25%' },
-  { percent:25, eyebrow:'已经开始了', copy:'第 1 次相见', button:'看看 1 天后' },
-  { percent:50, eyebrow:'你又回来了一次', copy:'第 2 次相见', button:'看看 7 天后' },
-  { percent:75, eyebrow:'重要的东西正在留下', copy:'第 3 次相见', button:'看看 30 天后' },
-  { percent:100, eyebrow:'四次相见，刚刚好', copy:'它已经长成了', button:'重新体验' },
+  { percent:0, eyebrow:'今天先见一面', copy:'点击一下，收下当前内容', button:'收下这条 · 第 1 次见面' },
+  { percent:25, eyebrow:'已经收下', copy:'相见进度 1/4 · 宠物 25%', button:'看看第 2 天' },
+  { percent:50, eyebrow:'完成了一次回看', copy:'相见进度 2/4 · 宠物 50%', button:'看看第 7 天' },
+  { percent:75, eyebrow:'重要的东西正在留下', copy:'相见进度 3/4 · 宠物 75%', button:'看看第 30 天' },
+  { percent:100, eyebrow:'已完成 4 次相见', copy:'相见进度 4/4 · 宠物长成', button:'重新体验' },
 ];
 
 const pet = document.querySelector('#demo-pet');
@@ -21,7 +21,7 @@ function render() {
   document.querySelector('#demo-eyebrow').textContent = current.eyebrow;
   document.querySelector('#progress-copy').textContent = current.copy;
   advance.textContent = current.button;
-  pet.setAttribute('aria-label', `可拖动的一点宠物，当前进度 ${current.percent}%`);
+  pet.setAttribute('aria-label', `可拖动的一点宠物，宠物成长 ${current.percent}%`);
   document.querySelectorAll('.rhythm li').forEach((item) => item.classList.toggle('done', Number(item.dataset.step) <= stage));
 }
 

@@ -10,14 +10,14 @@ async function send(message) {
 }
 
 function stateLabel(record, now = Date.now()) {
-  if (record.stage === 4) return '已经长成 · 100%';
-  if (record.nextReviewAt <= now) return `今天可以回来 · ${progress(record.stage)}%`;
-  return `等它再回来 · ${progress(record.stage)}%`;
+  if (record.stage === 4) return '已完成 4 次相见 · 宠物长成';
+  if (record.nextReviewAt <= now) return `今天待回看 · 已完成 ${record.stage}/4 次相见`;
+  return `等待下次回看 · 已完成 ${record.stage}/4 次相见`;
 }
 
 function nextLabel(record) {
-  if (record.stage === 4) return '四次相见，刚刚好';
-  return `下次回来：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
+  if (record.stage === 4) return '四次相见已经完成';
+  return `下次回看：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
 }
 
 function render(records) {
@@ -29,7 +29,7 @@ function render(records) {
   if (!records.length) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = '还没有收藏。去任意网页唤出宠物，收下一条就已经完成 25%。';
+    empty.textContent = '还没有收藏。去任意普通网页点击“一点”图标，再点“收下这条”。';
     recordsRoot.append(empty);
     return;
   }
@@ -42,7 +42,7 @@ function render(records) {
     const excerpt = node.querySelector('.record-excerpt');
     if (record.excerpt) { excerpt.textContent = `“${record.excerpt}”`; excerpt.hidden = false; }
     node.querySelector('.progress span').style.width = `${progress(record.stage)}%`;
-    node.querySelector('.progress').setAttribute('aria-label', `回来进度 ${progress(record.stage)}%`);
+    node.querySelector('.progress').setAttribute('aria-label', `已完成 ${record.stage}/4 次相见，宠物成长 ${progress(record.stage)}%`);
     node.querySelector('.open').addEventListener('click', () => send({ type:'open-record', url:record.url }).catch(showError));
     node.querySelector('.delete').addEventListener('click', async () => {
       if (!confirm(`删除“${record.title}”的本地记录？`)) return;

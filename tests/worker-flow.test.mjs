@@ -41,6 +41,7 @@ function chromeMock({ failWrites = 0, missingReceiverOnce = false, injectionErro
     },
     commands: { onCommand: { addListener(fn) { listeners.command = fn; } } },
     tabs: {
+      onUpdated: { addListener(fn) { listeners.tabUpdated = fn; } },
       async query() { return []; },
       async sendMessage(tabId, message) {
         calls.messages.push({ tabId, message });
@@ -82,7 +83,18 @@ test('alarm 只安排未来记录，到期记录只触发 badge', async () => {
   assert.deepEqual(state.calls.alarmCreates, [{ name: '12730-next-review', options: { when: now + 8_000 } }]);
   assert.deepEqual(state.calls.alarmClears, []);
   await refreshBadge([due, future], now);
-  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.text === '●'));
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.text === '1'));
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'color' && value.color === '#28735F'));
+});
+
+test('到期数量超过九条时 badge 显示 9+', async () => {
+  const state = chromeMock();
+  const { refreshBadge } = await loadWorker('badge-count');
+  const now = 10_000;
+  const due = Array.from({ length: 11 }, (_, index) => ({ stage: 1, nextReviewAt: now - index, createdAt: index }));
+  await refreshBadge(due, now);
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.text === '9+'));
+  assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.title === '有 11 份收藏想见你'));
 });
 
 test('没有未来记录时才清除 alarm，不把到期记录改排到一秒后', async () => {
@@ -180,6 +192,18 @@ test('受保护页面显示当前标签专属错误 badge 和标题', async () =
   assert.ok(state.calls.badges.some(([kind, value]) => kind === 'title' && value.tabId === 77 && value.title === '请在普通网页中使用一点'));
 });
 
+test('错误 badge 在刷新或换页时清除并恢复全局到期颜色', async () => {
+  const state = chromeMock();
+  await loadWorker('clear-tab-error');
+  state.listeners.action({ id: 77, windowId: 1, title: '扩展管理', url: 'chrome://extensions/' });
+  await new Promise((resolve) => setTimeout(resolve, 15));
+  state.listeners.tabUpdated(77, { status: 'loading' });
+  await new Promise((resolve) => setTimeout(resolve, 15));
+  const tabTextCalls = state.calls.badges.filter(([kind, value]) => kind === 'text' && value.tabId === 77);
+  assert.equal(tabTextCalls.at(-1)[1].text, null);
+  const tabColorCalls = state.calls.badges.filter(([kind, value]) => kind === 'color' && value.tabId === 77);
+  assert.equal(tabColorCalls.at(-1)[1].color, '#28735F');
+});
 test('普通网页注入失败也显示当前标签专属可见反馈', async () => {
   const state = chromeMock({ missingReceiverOnce: true, injectionError: new Error('Cannot access contents of the page') });
   await loadWorker('injection-failure');

@@ -20,7 +20,7 @@ test('Manifest V3 且权限严格等于网页宠物允许列表', () => {
 test('清单引用的扩展资源全部存在', async () => {
   const files = new Set([
     manifest.background.service_worker, manifest.options_ui.page,
-    ...Object.values(manifest.icons), manifest.action.default_icon,
+    ...Object.values(manifest.icons), ...Object.values(manifest.action.default_icon),
   ]);
   await Promise.all([...files].map((file) => access(new URL(`../extension/${file}`, import.meta.url))));
 });
