@@ -1,11 +1,13 @@
 import {
-  advanceRecord, createRecord, MAX_EXCERPT_LENGTH, MAX_STAGE, nextReviewAtFor, normalizeUrl, selectNextDue,
+  advanceRecord, createRecord, isDue, MAX_EXCERPT_LENGTH, MAX_STAGE, nextReviewAtFor, normalizeUrl, selectNextDue,
   sourceDomain, upsertByNormalizedUrl, updateRecordUrl
 } from './domain.mjs';
 
 const RECORDS_KEY = 'records';
 const SETTINGS_KEY = 'settings';
 const REVIEW_ALARM = '12730-next-review';
+const DUE_BADGE_COLOR = '#28735F';
+const UNAVAILABLE_BADGE_COLOR = '#8A5200';
 
 export function createSerialQueue() {
   let tail = Promise.resolve();
@@ -61,10 +63,10 @@ export async function scheduleNext(records = null, now = Date.now()) {
 
 export async function refreshBadge(records = null, now = Date.now()) {
   const currentRecords = records ?? await getRecords();
-  const hasDue = Boolean(selectNextDue(currentRecords, now));
-  await chrome.action.setBadgeBackgroundColor({ color: hasDue ? '#F18F6D' : '#00000000' });
-  await chrome.action.setBadgeText({ text: hasDue ? '●' : '' });
-  await chrome.action.setTitle({ title: hasDue ? '有一份收藏想见你' : '打开一点' });
+  const dueCount = currentRecords.filter((record) => isDue(record, now)).length;
+  await chrome.action.setBadgeBackgroundColor({ color: DUE_BADGE_COLOR });
+  await chrome.action.setBadgeText({ text: dueCount > 9 ? '9+' : String(dueCount || '') });
+  await chrome.action.setTitle({ title: dueCount ? `有 ${dueCount} 份收藏想见你` : '打开一点' });
 }
 
 function requestBadgeRefresh(records = null) {
@@ -94,7 +96,7 @@ async function injectCurrentPet(tabId) {
 async function setTabInjectionError(tabId) {
   if (!tabId) return;
   await Promise.allSettled([
-    chrome.action.setBadgeBackgroundColor({ tabId, color: '#D64545' }),
+    chrome.action.setBadgeBackgroundColor({ tabId, color: UNAVAILABLE_BADGE_COLOR }),
     chrome.action.setBadgeText({ tabId, text: '!' }),
     chrome.action.setTitle({ tabId, title: '请在普通网页中使用一点' }),
   ]);
@@ -103,6 +105,7 @@ async function setTabInjectionError(tabId) {
 async function clearTabInjectionError(tabId) {
   if (!tabId) return;
   await Promise.allSettled([
+    chrome.action.setBadgeBackgroundColor({ tabId, color: DUE_BADGE_COLOR }),
     chrome.action.setBadgeText({ tabId, text: null }),
     chrome.action.setTitle({ tabId, title: null }),
   ]);
@@ -303,6 +306,9 @@ if (globalThis.chrome?.runtime?.onMessage) {
   });
   chrome.storage.onChanged.addListener((_changes, areaName) => {
     if (areaName === 'local') requestBadgeRefresh();
+  });
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (changeInfo.status === 'loading') clearTabInjectionError(tabId);
   });
   chrome.action.onClicked.addListener((tab) => {
     handleToolbarClick(tab).catch((error) => console.warn('12730 pet injection failed', error));

@@ -300,7 +300,17 @@ test('工具栏 show-pet 消息会直接打开收藏卡片', async () => {
   listener({ type: 'show-pet', mode: 'current' });
   await harness.flush();
   assert.equal(harness.hook.card.hidden, false);
-  assert.match(harness.hook.card.innerHTML, /收下这条/);
+  assert.match(harness.hook.card.innerHTML, /收下这条 · 第 1 次见面/);
+  assert.doesNotMatch(harness.hook.card.innerHTML, /完成 25%/);
+});
+
+test('到期卡片明确显示状态、进度和完成动作', async () => {
+  const harness = createHarness({ record, due: true });
+  await harness.flush();
+  assert.match(harness.hook.card.innerHTML, /今天待回看/);
+  assert.match(harness.hook.card.innerHTML, /相见进度 · 宠物 25%/);
+  assert.match(harness.hook.card.innerHTML, /完成这次回看/);
+  assert.doesNotMatch(harness.hook.card.innerHTML, /这次回来了/);
 });
 
 test('卡片把删除移到记录页并提供全部记录入口', async () => {

@@ -4,86 +4,60 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="一点的作者、日常反馈与交流群入口。">
+  <meta name="description" content="给一点留下反馈，在小红书找到一点，或了解作者终树。">
   <meta name="theme-color" content="#f7f3e8">
-  <title>作者与联系 · 一点</title>
+  <title>反馈与联系 · 一点</title>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body class="contact-body">
   <nav class="nav" aria-label="主导航">
-    <a class="brand" href="index.html" aria-label="返回一点首页"><span class="brand-dot"></span>一点</a>
+    <a class="brand" href="index.html" aria-label="返回一点首页"><img class="brand-icon" src="icon.png" alt="">一点</a>
     <div class="nav-links"><a href="changelog.html">更新记录</a><a href="index.html#install">安装</a><a class="nav-download" href="index.html">返回首页</a></div>
   </nav>
 
   <main class="contact-main">
-    <section class="contact-hero">
-      <p class="kicker">作者与联系</p>
-      <h1>有问题，<br><em>就留在这里。</em></h1>
-      <p>一点还在第一版。这里不讲一个宏大的创始故事，只把作者、反馈和交流入口放在明处。</p>
+    <section id="feedback" class="contact-hero">
+      <p class="kicker">反馈与联系</p>
+      <h1>说说你的<br><em>想法。</em></h1>
+      <p>发现问题、想到一个功能，或有一次内容回来得刚刚好，都可以告诉我。每条反馈都由作者本人看到。</p>
+      <div class="hero-actions">
+        <a class="primary" href="https://docs.qq.com/form/page/DZE9LR0hwVkRyemZn" target="_blank" rel="noopener noreferrer">写下反馈 ↗</a>
+        <a class="secondary" href="#social">在小红书找到一点</a>
+      </div>
+      <small class="contact-hint">可以匿名；想收到回复时再留邮箱。填写时需要登录腾讯文档。</small>
     </section>
 
-    <section class="contact-grid" aria-label="联系入口">
-      <article id="feedback" class="contact-card">
-        <div class="contact-card-top"><span>01</span><span class="contact-status">已开放</span></div>
-        <h2>把这一点告诉我</h2>
-        <p>哪里不顺手、哪次内容回来得刚刚好、还想让一点陪你记住什么，都可以写下来。</p>
-        <a class="contact-action" href="https://docs.qq.com/form/page/DZE9LR0hwVkRyemZn" target="_blank" rel="noopener noreferrer">写下你在意的这一点 ↗</a>
-        <small>可以匿名；想收到回复时，再留下邮箱。有了去向，我会在更新记录里带回来。</small>
-      </article>
-
-      <article id="community" class="contact-card">
-        <div class="contact-card-top"><span>02</span><span class="contact-status pending">筹备中</span></div>
-        <h2>加入交流群</h2>
-        <p>和真实使用者交流收藏、回来，以及怎样让工作和学习里的重要内容不再失踪。</p>
-        <span class="contact-action pending" aria-disabled="true">群入口待开放</span>
-        <small>群会先写清用途和边界，再放二维码；不做广告群，也不把群当通知列表。</small>
-      </article>
-
-      <article class="contact-card">
-        <div class="contact-card-top"><span>03</span><span class="contact-status">已公开</span></div>
-        <h2>联系作者</h2>
-        <p>一点由终树 endTree 独立发起并持续维护。产品想法、文案、设计和版本变化都会在公开页面留下记录。</p>
-        <div class="contact-links">
-          <a href="changelog.html">查看更新记录 →</a>
-          <a href="https://github.com/2487238628/yidian" target="_blank" rel="noopener noreferrer">查看源码 · 在 GitHub 支持一点 ↗</a>
-          <a href="https://2487238628.github.io/yidian/" target="_blank" rel="noopener noreferrer">一点在线体验 ↗</a>
-        </div>
-      </article>
-    </section>
-
-    <section class="contact-social" aria-labelledby="social-title">
+    <section id="social" class="contact-social" aria-labelledby="social-title">
       <div>
         <p class="section-tag">继续关注</p>
-        <h2 id="social-title">在小红书<br>找到我。</h2>
-        <p>产品更新、制作过程和真实使用故事，会慢慢发在这里。</p>
+        <h2 id="social-title">在小红书，<br>继续见面。</h2>
+        <p>一点的更新说明、真实用法和制作过程，会发在这里。</p>
       </div>
       <figure>
         <div class="qr-crop">
           <img src="xiaohongshu-endtree.jpg" width="986" height="1314" alt="终树的小红书二维码，小红书号 1052658250">
         </div>
-        <figcaption><strong>终树</strong><span>小红书号：1052658250</span></figcaption>
+        <figcaption><strong>扫码进入小红书</strong><span>小红书号 1052658250</span></figcaption>
       </figure>
     </section>
 
-    <section class="contact-flow">
-      <div><p class="section-tag">反馈如何回来</p><h2>收到，不等于收进黑箱。</h2></div>
-      <ol>
-        <li><span>1</span><p><b>先确认收到</b>问题、建议和使用场景分开记录。</p></li>
-        <li><span>2</span><p><b>再说明去向</b>会做、暂时不做，或者需要更多信息，都直接说清楚。</p></li>
-        <li><span>3</span><p><b>最后回告结果</b>进入版本的反馈，会在更新记录里带回来。</p></li>
-      </ol>
-    </section>
-
-    <section class="contact-note">
-      <strong>社群不是广播列表。</strong>
-      <p>它只服务三件事：交换真实用法、一起把问题说清楚、让有价值的建议看见后续。</p>
+    <section class="contact-about" aria-labelledby="about-title">
+      <div><p class="section-tag">关于作者</p></div>
+      <div>
+        <h2 id="about-title">我是终树，<br>一点的发起者。</h2>
+        <p>做一点，是因为我也收藏过很多重要内容，却很少真正回去看。我想把它做成一个安静、不催促，但能让重要内容重新回来的工具。</p>
+        <div class="contact-links">
+          <a href="changelog.html">查看更新记录 →</a>
+          <a href="https://github.com/2487238628/yidian" target="_blank" rel="noopener noreferrer">在 GitHub 查看源码 →</a>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer>
     <p><strong>一点</strong> · 重要的，不只见一次。</p>
-    <p><a href="changelog.html">更新记录</a> · <a href="index.html">返回首页</a></p>
+    <p><a href="changelog.html">更新记录</a> · <a href="privacy.html">隐私政策</a> · <a href="index.html">返回首页</a></p>
   </footer>
 </body>
 </html>

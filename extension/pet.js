@@ -87,11 +87,11 @@
     liquid.style.height = `${progress(stage)}%`;
     const domain = location.hostname.replace(/^www\./,'') || '当前页面';
     if (!record) {
-      card.innerHTML = `<p class="o-eyebrow">重要的，不只见一次</p><h2 class="o-title">${escapeHtml(document.title || domain)}</h2><p class="o-meta">${escapeHtml(domain)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>0%</strong><span>先收下，以后再见</span></div><div class="o-actions"><button class="o-primary" data-action="mark">收下这条 · 完成 25%</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
+      card.innerHTML = `<p class="o-eyebrow">重要的，不只见一次</p><h2 class="o-title">${escapeHtml(document.title || domain)}</h2><p class="o-meta">${escapeHtml(domain)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>0/4</strong><span>还没有收下</span></div><div class="o-actions"><button class="o-primary" data-action="mark">收下这条 · 第 1 次见面</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">我的收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
     } else {
-      const label = stage === 4 ? '已经长成' : due ? '重要内容回来了' : '陪你等它再回来';
-      const next = stage === 4 ? '四次相见，刚刚好。' : due ? '今天可以回来一次' : `下次回来：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
-      card.innerHTML = `<p class="o-eyebrow">${label}</p><h2 class="o-title">${escapeHtml(record.title)}</h2><p class="o-meta">${escapeHtml(record.sourceDomain)} · ${escapeHtml(next)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>${progress(stage)}%</strong><span>第 ${stage} 次相见</span></div><div class="o-actions">${due ? '<button class="o-primary" data-action="review">这次回来了</button>' : ''}<button data-action="open">打开收藏来源</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">全部收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
+      const label = stage === 4 ? '已完成 4 次相见' : due ? '今天待回看' : '等待下次回看';
+      const next = stage === 4 ? '宠物已经长成。' : due ? '看完后，确认完成这次回看' : `下次回看：${new Date(record.nextReviewAt).toLocaleDateString('zh-CN')}`;
+      card.innerHTML = `<p class="o-eyebrow">${label}</p><h2 class="o-title">${escapeHtml(record.title)}</h2><p class="o-meta">${escapeHtml(record.sourceDomain)} · ${escapeHtml(next)}</p>${excerpt ? `<p class="o-excerpt">“${escapeHtml(excerpt)}”</p>` : ''}<div class="o-progress"><strong>${stage}/4</strong><span>相见进度 · 宠物 ${progress(stage)}%</span></div><div class="o-actions">${due ? '<button class="o-primary" data-action="review">完成这次回看</button>' : ''}<button data-action="open">打开原网页</button><button data-action="motion">${state?.settings?.reducedMotion ? '继续散步' : '安静陪伴'}</button><button data-action="library">我的收藏</button><button class="o-hide" data-action="hide">暂时收起宠物</button></div>`;
     }
     positionCard();
   }
@@ -100,11 +100,11 @@
       if (action === 'hide') { root.hidden = true; card.hidden = true; return; }
       if (action === 'mark') {
         const result = await send({ type:'mark-current', tab:page() });
-        showToast(result.created ? '已经收下。宠物长到 25%。' : '这页已经收过了。');
+        showToast(result.created ? '已经收下。完成第 1/4 次相见，宠物长到 25%。' : '这页已经收过了。');
       }
       if (action === 'review') {
         const result = await send({ type:'complete-review', normalizedUrl:state.record.normalizedUrl });
-        showToast(result.changed ? '又回来了一次。宠物长大了。' : '现在还没到下一次相见。');
+        showToast(result.changed ? `完成第 ${result.record.stage}/4 次相见。宠物又长大了一点。` : '现在还没到下一次回看。');
       }
       if (action === 'open') await send({ type:'open-record', url:state.record.url });
       if (action === 'library') await send({ type:'open-library' });
