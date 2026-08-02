@@ -106,6 +106,10 @@ h2 { margin:0; font-size:clamp(34px,5vw,64px); line-height:1.1; letter-spacing:-
 .install li { display:grid; grid-template-columns:50px 1fr; gap:18px; align-items:start; padding:22px; border:1px solid var(--line); border-radius:20px; background:var(--white); }
 .install li>span { display:grid; place-content:center; width:42px; height:42px; border-radius:50%; background:var(--mint-light); font-weight:900; }
 .install b { font-size:17px; } .install p { margin:6px 0 0; color:#65766f; line-height:1.6; }
+.install .pin-step { border-color:#8fcdb7; background:linear-gradient(135deg,rgba(184,228,212,.38),var(--white)); }
+.pin-path { display:flex; align-items:center; gap:9px; margin-top:14px; color:var(--green); font-size:14px; font-weight:800; }
+.pin-path span,.pin-path strong { display:inline-grid; place-content:center; min-height:34px; padding:0 12px; border:1px solid var(--line); border-radius:999px; background:var(--white); font-style:normal; }
+.pin-path i { color:#8aa097; font-style:normal; }
 footer { display:flex; justify-content:space-between; gap:24px; width:min(1180px,calc(100% - 36px)); margin:0 auto; padding:36px 0 52px; border-top:1px solid var(--line); color:#64746d; font-size:13px; }
 footer p { margin:0; }
 @keyframes walk { from { left:28px; } to { left:calc(100% - 140px); } }
