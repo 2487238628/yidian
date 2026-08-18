@@ -1,7 +1,11 @@
+import { matchesRecordQuery } from './domain.mjs';
+
 const recordsRoot = document.querySelector('#records');
 const status = document.querySelector('#status');
 const template = document.querySelector('#record-template');
 const migrationGuide = document.querySelector('#migration-guide');
+const archiveButton = document.querySelector('#archive-grown');
+const searchInput = document.querySelector('#search');
 const { progress, stepCopy } = globalThis.YIDIAN_COPY;
 const reviewTime = new Intl.DateTimeFormat('zh-CN', {
   month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
@@ -10,7 +14,9 @@ const encounterTime = new Intl.DateTimeFormat('zh-CN', {
   month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
 });
 let activeFilter = 'all';
+let activeQuery = '';
 let currentRecords = [];
+let currentArchived = [];
 
 function encountersFor(record) {
   return Array.isArray(record.encounters) ? record.encounters : [];
@@ -56,22 +62,31 @@ function nextLabel(record) {
 function render(records) {
   currentRecords = records;
   const now = Date.now();
-  const visibleRecords = records.filter((record) => matchesFilter(record, now));
+  const archivedView = activeFilter === 'archived';
+  const source = archivedView ? currentArchived : records;
+  const visibleRecords = source.filter((record) => matchesRecordQuery(record, activeQuery) && matchesFilter(record, now));
   document.querySelector('#total').textContent = records.length;
   document.querySelector('#due').textContent = records.filter((item) => item.stage < 4 && item.nextReviewAt <= now).length;
   document.querySelector('#complete').textContent = records.filter((item) => item.stage === 4).length;
   document.querySelector('#encounters').textContent = records.reduce((total, record) => total + encounterCount(record), 0);
+  archiveButton.disabled = !records.some((item) => item.stage === 4);
   recordsRoot.replaceChildren();
-  if (!records.length && !migrationGuide.dataset.seen) {
+  if (!records.length && !archivedView && !migrationGuide.dataset.seen) {
     migrationGuide.open = true;
     migrationGuide.dataset.seen = 'true';
   }
   if (!visibleRecords.length) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = records.length
-      ? '这里暂时没有内容。换一个关系状态看看。'
-      : '还没有收藏。去任意普通网页点击“一点”图标，再点“收下这条”。';
+    if (archivedView) {
+      empty.textContent = currentArchived.length
+        ? '归档里没有符合搜索的内容。'
+        : '还没有归档。点“归档已完成”，完成回看计划的收藏会收进这里，随时可以带回来。';
+    } else {
+      empty.textContent = source.length
+        ? '这里暂时没有内容。换一个关系状态看看。'
+        : '还没有收藏。去任意普通网页点击“一点”图标，再点“收下这条”。';
+    }
     recordsRoot.append(empty);
     return;
   }
@@ -112,6 +127,14 @@ function render(records) {
       try { await send({ type:'remove-record', normalizedUrl:record.normalizedUrl }); await load('记录已删除'); }
       catch (error) { showError(error); }
     });
+    const restore = node.querySelector('.restore');
+    if (archivedView) {
+      restore.hidden = false;
+      restore.addEventListener('click', async () => {
+        try { await send({ type:'restore-record', normalizedUrl:record.normalizedUrl }); await load('已带回收藏库'); }
+        catch (error) { showError(error); }
+      });
+    }
     recordsRoot.append(node);
   }
 }
@@ -119,10 +142,27 @@ function render(records) {
 function showError(error) { status.textContent = error.message || '操作失败，请重试'; }
 
 async function load(message = '') {
-  const response = await send({ type:'list-records' });
+  const [response, archivedResponse] = await Promise.all([
+    send({ type:'list-records' }),
+    send({ type:'list-archived' }),
+  ]);
+  currentArchived = archivedResponse.records;
   render(response.records);
   status.textContent = message;
 }
+
+searchInput.addEventListener('input', () => {
+  activeQuery = searchInput.value;
+  render(currentRecords);
+});
+
+archiveButton.addEventListener('click', async () => {
+  if (!confirm('把已完成回看计划的收藏收进归档？它们会从收藏库中隐藏，随时可在“已归档”里找回。')) return;
+  try {
+    const result = await send({ type:'archive-grown' });
+    await load(result.archived ? `已把 ${result.archived} 份完成的收藏收进归档` : '暂时没有可归档的收藏');
+  } catch (error) { showError(error); }
+});
 
 for (const button of document.querySelectorAll('.filters button')) {
   button.addEventListener('click', () => {
@@ -137,15 +177,26 @@ for (const button of document.querySelectorAll('.filters button')) {
 
 document.querySelector('#export').addEventListener('click', async () => {
   try {
-    const { records } = await send({ type:'list-records' });
-    const blob = new Blob([JSON.stringify({ version:2, exportedAt:new Date().toISOString(), records }, null, 2)], { type:'application/json' });
+    const [response, archivedResponse] = await Promise.all([
+      send({ type:'list-records' }),
+      send({ type:'list-archived' }),
+    ]);
+    const payload = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      records: response.records,
+      archived: archivedResponse.records,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `yidian-backup-${new Date().toISOString().slice(0,10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    status.textContent = `已导出 ${records.length} 份记录`;
+    status.textContent = archivedResponse.records.length
+      ? `已导出 ${response.records.length} 份记录（另含 ${archivedResponse.records.length} 份归档）`
+      : `已导出 ${response.records.length} 份记录`;
   } catch (error) { showError(error); }
 });
 
@@ -159,7 +210,7 @@ document.querySelector('#import').addEventListener('change', async (event) => {
   }
   try {
     const payload = JSON.parse(await file.text());
-    const result = await send({ type:'import-records', records:payload.records ?? payload });
+    const result = await send({ type:'import-records', records:payload.records ?? payload, archived:payload.archived });
     await load(`已带回 ${result.imported} 份记录，现在共有 ${result.total} 份收藏`);
   } catch (error) { showError(error); }
   event.target.value = '';

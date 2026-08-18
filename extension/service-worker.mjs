@@ -4,6 +4,7 @@ import {
 } from './domain.mjs';
 
 const RECORDS_KEY = 'records';
+const ARCHIVED_KEY = 'archivedRecords';
 const SETTINGS_KEY = 'settings';
 const REVIEW_ALARM = 'yidian-next-review';
 const LEGACY_REVIEW_ALARM = '12730-next-review';
@@ -34,6 +35,15 @@ async function getRecords() {
 
 async function saveRecords(records) {
   await chrome.storage.local.set({ [RECORDS_KEY]: records });
+}
+
+async function getArchivedRecords() {
+  const archived = (await chrome.storage.local.get(ARCHIVED_KEY))[ARCHIVED_KEY];
+  return Array.isArray(archived) ? archived : [];
+}
+
+async function saveArchivedRecords(archived) {
+  await chrome.storage.local.set({ [ARCHIVED_KEY]: archived });
 }
 
 async function getSettings() {
@@ -234,6 +244,43 @@ async function changeUrl(normalizedUrl, url) {
   });
 }
 
+// 归档已完成：把 stage 4 的记录整体移入 archivedRecords，收藏库默认不再显示。
+async function archiveGrown() {
+  return enqueueRecordsMutation(async () => {
+    const records = await getRecords();
+    const grown = records.filter((record) => record.stage === MAX_STAGE);
+    if (!grown.length) return { ok: true, archived: 0, remaining: records.length };
+    const remaining = records.filter((record) => record.stage !== MAX_STAGE);
+    const merged = new Map((await getArchivedRecords()).map((record) => [record.normalizedUrl, record]));
+    for (const record of grown) {
+      const existing = merged.get(record.normalizedUrl);
+      if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
+    }
+    await saveRecords(remaining);
+    await saveArchivedRecords([...merged.values()]);
+    await syncDerivedState(remaining);
+    return { ok: true, archived: grown.length, remaining: remaining.length };
+  });
+}
+
+async function restoreArchived(normalizedUrl) {
+  return enqueueRecordsMutation(async () => {
+    const archived = await getArchivedRecords();
+    const index = archived.findIndex((record) => record.normalizedUrl === normalizedUrl);
+    if (index < 0) return { ok: false, error: '归档里没有这条记录' };
+    const records = await getRecords();
+    if (records.some((record) => record.normalizedUrl === normalizedUrl)) {
+      return { ok: false, error: '收藏库里已有同一网页的记录' };
+    }
+    const next = consolidateRecords([...records, archived[index]]).records;
+    await saveRecords(next);
+    await saveArchivedRecords(archived.filter((_, i) => i !== index));
+    await syncDerivedState(next);
+    await refreshInjectedPets().catch(() => undefined);
+    return { ok: true, record: archived[index] };
+  });
+}
+
 function normalizeImportedRecord(record, now = Date.now()) {
   if (!record || typeof record !== 'object') throw new TypeError('备份中包含无效记录');
   const stage = Number(record.stage);
@@ -276,21 +323,29 @@ function normalizeImportedRecord(record, now = Date.now()) {
   };
 }
 
-async function importRecords(rawRecords) {
+function mergeByKey(current, incoming) {
+  const merged = new Map(current.map((record) => [record.normalizedUrl, record]));
+  for (const record of incoming) {
+    const existing = merged.get(record.normalizedUrl);
+    if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
+  }
+  return [...merged.values()];
+}
+
+async function importRecords(rawRecords, rawArchived) {
   if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的一点备份文件');
+  const archivedList = rawArchived == null ? [] : rawArchived;
+  if (!Array.isArray(archivedList) || archivedList.length > 5000) throw new TypeError('请选择有效的一点备份文件');
   const incoming = rawRecords.map((record) => normalizeImportedRecord(record));
+  const incomingArchived = archivedList.map((record) => normalizeImportedRecord(record));
   return enqueueRecordsMutation(async () => {
-    const current = await getRecords();
-    const merged = new Map(current.map((record) => [record.normalizedUrl, record]));
-    for (const record of incoming) {
-      const existing = merged.get(record.normalizedUrl);
-      if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
-    }
-    const records = consolidateRecords([...merged.values()]).records;
+    const records = consolidateRecords(mergeByKey(await getRecords(), incoming)).records;
+    const archived = mergeByKey(await getArchivedRecords(), incomingArchived);
     await saveRecords(records);
+    await saveArchivedRecords(archived);
     await syncDerivedState(records);
     await refreshInjectedPets().catch(() => undefined);
-    return { ok: true, imported: incoming.length, total: records.length };
+    return { ok: true, imported: incoming.length + incomingArchived.length, total: records.length };
   });
 }
 
@@ -331,6 +386,10 @@ export async function handleMessage(message) {
     });
     return { ok: true, records };
   }
+  if (message.type === 'list-archived') {
+    const records = (await getArchivedRecords()).toSorted((a, b) => b.updatedAt - a.updatedAt);
+    return { ok: true, records };
+  }
   if (message.type === 'open-library') {
     await chrome.tabs.create({ url: chrome.runtime.getURL('library.html') });
     return { ok: true };
@@ -345,10 +404,12 @@ export async function handleMessage(message) {
   if (message.type === 'restart-journey') return restartJourney(message.normalizedUrl);
   if (message.type === 'remove-record') return removeRecord(message.normalizedUrl);
   if (message.type === 'change-url') return changeUrl(message.normalizedUrl, message.url);
+  if (message.type === 'archive-grown') return archiveGrown();
+  if (message.type === 'restore-record') return restoreArchived(message.normalizedUrl);
   if (message.type === 'set-reduced-motion') return setReducedMotion(message.value);
   if (message.type === 'get-settings') return { ok: true, settings: await getSettings() };
   if (message.type === 'set-notify-on-due') return setNotifyOnDue(message.value);
-  if (message.type === 'import-records') return importRecords(message.records);
+  if (message.type === 'import-records') return importRecords(message.records, message.archived);
   return { ok: false, error: '未知操作' };
 }
 

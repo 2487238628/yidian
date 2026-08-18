@@ -117,6 +117,22 @@ test('我的收藏用状态、动作和结果解释回看流程', async () => {
   assert.doesNotMatch(`${html}\n${script}`, /今天可回来|已经长成 · 100%|收下一条就已经完成 25%/);
 });
 
+test('收藏库提供搜索、已归档筛选与归档动作', async () => {
+  const [html, script] = await Promise.all([
+    readFile(new URL('extension/library.html', repo), 'utf8'),
+    readFile(new URL('extension/library.js', repo), 'utf8'),
+  ]);
+  assert.match(html, /搜索标题、域名或选段/);
+  assert.match(html, /data-filter="archived"/);
+  assert.match(html, /归档已完成/);
+  assert.match(html, /带回收藏库/);
+  assert.match(script, /matchesRecordQuery/);
+  assert.match(script, /type:'archive-grown'/);
+  assert.match(script, /type:'restore-record'/);
+  assert.match(script, /type:'list-archived'/);
+  assert.match(script, /archived: archivedResponse\.records/);
+});
+
 test('GitHub 反馈入口区分使用问题和功能建议', async () => {
   const [problem, idea, config] = await Promise.all([
     readFile(new URL('.github/ISSUE_TEMPLATE/problem.yml', repo), 'utf8'),

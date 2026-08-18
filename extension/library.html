@@ -15,6 +15,7 @@
         <p class="intro">这里保存你收下的网页和选段。每条内容共 4 步：收下 1 次，再回看 3 次。你可以查看下次回看的具体时间；到期时，点击浏览器工具栏里的“一点”完成回看。</p>
       </div>
       <div class="tools" aria-label="记录工具">
+        <button id="archive-grown" type="button" disabled title="把已完成回看计划的收藏收进归档，随时可在“已归档”里找回">归档已完成</button>
         <button id="export" type="button">导出备份</button>
         <label class="button" for="import">导入备份</label>
         <input id="import" type="file" accept="application/json,.json">
@@ -49,12 +50,17 @@
       <div><strong id="encounters">0</strong><span>途中偶遇</span></div>
     </section>
 
+    <label class="search">
+      <input id="search" type="search" placeholder="搜索标题、域名或选段" aria-label="搜索收藏">
+    </label>
+
     <nav class="filters" aria-label="按关系状态查看">
       <button class="active" type="button" data-filter="all" aria-pressed="true">全部</button>
       <button type="button" data-filter="due" aria-pressed="false">今天要见</button>
       <button type="button" data-filter="active" aria-pressed="false">正在相见</button>
       <button type="button" data-filter="encountered" aria-pressed="false">途中偶遇</button>
       <button type="button" data-filter="complete" aria-pressed="false">已完成</button>
+      <button type="button" data-filter="archived" aria-pressed="false">已归档</button>
     </nav>
 
     <p id="status" role="status" aria-live="polite"></p>
@@ -76,6 +82,7 @@
       <div class="progress" aria-label="再次查看进度"><span></span></div>
       <div class="record-actions">
         <button class="open" type="button">打开原网页</button>
+        <button class="restore" type="button" hidden>带回收藏库</button>
         <button class="delete" type="button">删除</button>
       </div>
     </article>
