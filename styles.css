@@ -23,8 +23,11 @@ h1 em { color:var(--green); font-style:normal; white-space:nowrap; }
 .microcopy { margin:14px 0 0; color:#78877f; font-size:12px; }
 .demo { position:relative; padding:18px; border:1px solid var(--line); border-radius:32px; background:rgba(255,253,247,.88); box-shadow:0 32px 90px rgba(32,51,45,.14); }
 .demo::before { content:""; position:absolute; inset:9px; z-index:-1; border-radius:28px; background:var(--mint-light); transform:rotate(3deg); }
-.demo-topline { display:flex; justify-content:space-between; padding:4px 5px 12px; color:#6f8079; font-size:12px; }
-.demo-topline button { padding:0; border:0; background:transparent; color:var(--green); cursor:pointer; }
+.demo-topline { display:flex; align-items:start; justify-content:space-between; gap:18px; padding:4px 5px 12px; color:#6f8079; font-size:12px; }
+.demo-topline>span { display:grid; gap:3px; }
+.demo-topline b { color:var(--ink); font-size:13px; }
+.demo-topline small { font-size:11px; line-height:1.45; }
+.demo-topline button { flex:none; padding:0; border:0; background:transparent; color:var(--green); cursor:pointer; }
 .pet-stage { position:relative; height:190px; overflow:hidden; border-radius:22px; background:linear-gradient(#edf7f2 72%,#dcebe4 72%); }
 .pet-stage::after { content:""; position:absolute; left:0; right:0; bottom:42px; height:1px; background:rgba(32,51,45,.09); }
 .demo-pet { --fill:0%; position:absolute; left:28px; bottom:33px; z-index:2; width:112px; height:128px; cursor:grab; touch-action:none; user-select:none; filter:drop-shadow(0 12px 9px rgba(32,51,45,.18)); animation:walk 9s ease-in-out infinite alternate; }

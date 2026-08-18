@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#f7f3e8">
   <title>一点｜工作与学习的收藏回看工具</title>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <nav class="nav" aria-label="主导航">
@@ -24,16 +24,16 @@
       <div class="hero-copy">
         <p class="kicker">工作与学习的收藏回看工具</p>
         <h1>重要的，<br><em>不只见一次。</em></h1>
-        <p class="hero-lead">在工作和学习中看到值得再见的网页或一段文字，先收下。到期后，扩展图标旁会出现数量；你点开时，一次带回一条。</p>
+        <p class="hero-lead">看到以后还想用的网页或一段文字，点一下收下。收藏满 24 小时后，一点会按第 2、7、30 天的节奏把原内容重新带回；图标旁的数字，就是待回看的数量。</p>
         <div class="hero-actions">
-          <a class="primary" href="#demo">看看怎么用</a>
+          <a class="primary" href="#demo">30 秒看懂怎么用</a>
           <a class="secondary" href="https://microsoftedge.microsoft.com/addons/detail/mdpemepjnajchhlagfkpggenllebeacd" target="_blank" rel="noopener noreferrer">在 Edge 商店安装</a>
         </div>
         <p class="microcopy">Edge 商店已上线 · Chrome 可手动安装 · 无需登录 · 数据只在本地</p>
       </div>
 
       <div id="demo" class="demo" aria-label="一点互动演示">
-        <div class="demo-topline"><span>可拖动它</span><button id="reset" type="button">重新体验</button></div>
+        <div class="demo-topline"><span><b>30 秒互动演示</b><small>共 4 步：收下 1 次，再回看 3 次。连续点击下面的按钮体验，宠物也可以拖动。</small></span><button id="reset" type="button">重新体验</button></div>
         <div class="pet-stage" id="pet-stage">
           <div class="demo-pet" id="demo-pet" role="img" aria-label="可拖动的一点宠物，宠物成长 0%" tabindex="0">
             <div class="pet-body"><div class="liquid" id="liquid"></div><div class="eyes"></div><div class="mouth"></div></div>
@@ -41,30 +41,30 @@
           </div>
         </div>
         <article class="demo-card" aria-live="polite">
-          <p id="demo-eyebrow">今天先见一面</p>
+          <p id="demo-eyebrow">第 1 步 · 收下当前内容</p>
           <h2 id="demo-title">现代艺术史 · 第三讲</h2>
-          <p id="demo-meta">选中的段落 · 宠物成长</p>
-          <div class="demo-progress"><strong id="percent">0%</strong><span id="progress-copy">先做一点，就已经开始</span></div>
-          <button id="advance" class="demo-primary" type="button">收下这条 · 第 1 次见面</button>
+          <p id="demo-meta">网页选段 · 这是互动演示</p>
+          <div class="demo-progress"><strong id="percent">进度 0/4</strong><span id="progress-copy">流程还没开始</span></div>
+          <button id="advance" class="demo-primary" type="button">收下这条</button>
         </article>
         <ol class="rhythm" aria-label="再次查看节奏">
-          <li data-step="1"><b>第 1 天</b><span>收下</span></li>
-          <li data-step="2"><b>第 2 天</b><span>回来</span></li>
-          <li data-step="3"><b>第 7 天</b><span>再见</span></li>
-          <li data-step="4"><b>第 30 天</b><span>长成</span></li>
+          <li data-step="1"><b>今天</b><span>收下</span></li>
+          <li data-step="2"><b>第 2 天</b><span>第 1 次回看</span></li>
+          <li data-step="3"><b>第 7 天</b><span>第 2 次回看</span></li>
+          <li data-step="4"><b>第 30 天</b><span>第 3 次回看</span></li>
         </ol>
       </div>
     </section>
 
     <section id="why" class="problem">
       <div>
-        <p class="section-tag">收藏之后，还应该有下文</p>
-        <h2>让重要内容重新回到眼前，<br>也回到判断和行动中。</h2>
+        <p class="section-tag">收藏不是终点</p>
+        <h2>从收下，到再次用上。<br>只要三步。</h2>
       </div>
       <div class="problem-grid">
-        <article><span>01</span><h3>点图标，收下一条</h3><p>在普通网页点开“一点”，再点“收下这条”。整页或选段都会保存在本地。</p></article>
-        <article><span>02</span><h3>出现数字，完成回看</h3><p>第 2、7、30 天，到期数量会显示在图标旁。点开查看带回的内容，再确认完成这次回看。</p></article>
-        <article><span>03</span><h3>每回看一次，长一点</h3><p>一次收下，加上三次回看，刚好四次相见；每完成一次，宠物也会跟着长一点。</p></article>
+        <article><span>01</span><h3>点图标，收下当前内容</h3><p>在普通网页点开“一点”，再点“收下这条”。整页或你选中的文字都会保存在本地。</p></article>
+        <article><span>02</span><h3>图标出现数字，说明有内容到期</h3><p>从收藏满 24 小时后开始，到期数量会显示在图标旁。数字是 2，就有 2 条待回看。</p></article>
+        <article><span>03</span><h3>点开一条，完成这次回看</h3><p>一次收下，加上第 2、7、30 天的三次回看，共完成四次相见；宠物也会跟着长一点。</p></article>
       </div>      <aside class="quiet-reminder" aria-label="一点到期提醒示意">
         <div class="toolbar-sample" aria-hidden="true"><span>浏览器工具栏</span><b><img src="icon.png" alt=""><i>1</i></b></div>
         <div><p class="section-tag">安静提醒</p><h3>到期时，图标旁出现数字。</h3><p>数字表示待回看的收藏数量。不弹窗，不催促；你点开时，一次带回一条。</p></div>
@@ -72,12 +72,12 @@
     </section>
 
     <section class="use-cases">
-      <p class="section-tag">工作和学习，都可以先收下</p>
-      <h2>区别发生在内容回来以后。</h2>
+      <p class="section-tag">内容回来后，你可以这样用</p>
+      <h2>在工作中继续处理，<br>在学习中重新理解。</h2>
       <div class="case-row">
-        <article><b>工作继续</b><p>资料、决定和项目上下文回来后，继续、完成或重新判断。</p></article>
-        <article><b>学习再懂</b><p>文章、笔记和知识点回来后，回忆、核对或再理解。</p></article>
-        <article><b>由你决定</b><p>内容回来后，继续使用、暂时放下或删除记录，选择始终留在你手里。</p></article>
+        <article><b>继续处理工作内容</b><p>重新打开资料、决定和项目上下文，继续完成或重新判断。</p></article>
+        <article><b>重新理解学习内容</b><p>回到文章、笔记和知识点，回忆、核对或再理解。</p></article>
+        <article><b>保留还是放下，由你决定</b><p>回看后可以继续保留、打开原网页或删除记录，选择始终留在你手里。</p></article>
       </div>
     </section>
 
@@ -89,13 +89,13 @@
       <div class="features-layout">
         <div class="library-preview" aria-label="我的收藏页面示意">
           <div class="library-title"><span>我的收藏</span><small>本地记录</small></div>
-          <div class="library-summary"><div><b>12</b><span>条收藏</span></div><div><b>2</b><span>今天待回看</span></div><div><b>4</b><span>已完成 4 次相见</span></div></div>
+          <div class="library-summary"><div><b>12</b><span>条收藏</span></div><div><b>2</b><span>今天待回看</span></div><div><b>4</b><span>已完成全部回看</span></div></div>
           <article class="library-record due">
-            <div><small>今天待回看 · 已完成 2/4 次相见</small><strong>项目复盘里的关键决定</strong><p>“先确认用户真正要继续的那一步。”</p></div>
+            <div><small>今天待回看 · 四步进度 2/4</small><strong>项目复盘里的关键决定</strong><p>“先确认用户真正要继续的那一步。”</p></div>
             <span class="record-progress"><i class="half"></i></span>
           </article>
           <article class="library-record">
-            <div><small>下次回看：7 月 30 日 · 已完成 3/4 次相见</small><strong>现代艺术史 · 第三讲</strong><p>选中的段落会和来源一起保留。</p></div>
+            <div><small>下次回看：7 月 30 日 · 四步进度 3/4</small><strong>现代艺术史 · 第三讲</strong><p>选中的段落会和来源一起保留。</p></div>
             <span class="record-progress"><i class="three-quarters"></i></span>
           </article>
           <p class="library-tools">查看日期与进度 · 打开原网页 · 删除 · 本地备份</p>
@@ -103,7 +103,7 @@
         <div class="feature-list">
           <article><span>01</span><div><b>点击图标，收下一条</b><p>在普通网页点击“一点”，保存整页，或先选中文字再收下。</p></div></article>
           <article><span>02</span><div><b>出现数字，完成回看</b><p>第 2、7、30 天，到期数量会显示在图标旁；点开查看一条到期内容，再确认完成这次回看。</p></div></article>
-          <article><span>03</span><div><b>四次相见，宠物长成</b><p>一次收下、三次回看，相见进度从 1/4 到 4/4；宠物也从 25% 长到 100%。</p></div></article>
+          <article><span>03</span><div><b>一次收下，三次回看</b><p>四步进度从 1/4 到 4/4；每完成一次，宠物也会长一点。</p></div></article>
           <article><span>04</span><div><b>我的收藏</b><p>查看下次回看日期和进度，也能打开原网页、删除记录或进行本地备份。</p></div></article>
           <article><span>05</span><div><b>本地备份</b><p>记录可以导出为 JSON，也能从备份合并回来。</p></div></article>
           <article><span>06</span><div><b>无需登录</b><p>不读取未选择的正文，不把收藏记录上传到网络。</p></div></article>
