@@ -17,7 +17,7 @@
       "description": "收下当前网页或选中的一段"
     },
     "open-side-panel": {
-      "suggested_key": { "default": "Alt+Shift+Y", "mac": "Alt+Command+Shift+Y" },
+      "suggested_key": { "default": "Alt+Shift+Y", "mac": "MacCtrl+Shift+Y" },
       "description": "打开侧边栏，看看当前的收藏"
     }
   }
