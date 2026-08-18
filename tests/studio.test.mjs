@@ -126,10 +126,13 @@ test('收藏库提供搜索、已归档筛选与归档动作', async () => {
   assert.match(html, /data-filter="archived"/);
   assert.match(html, /归档已完成/);
   assert.match(html, /带回收藏库/);
+  assert.match(html, /id="quiet-toggle"/);
+  assert.match(html, /免打扰开始时间/);
   assert.match(script, /matchesRecordQuery/);
   assert.match(script, /type:'archive-grown'/);
   assert.match(script, /type:'restore-record'/);
   assert.match(script, /type:'list-archived'/);
+  assert.match(script, /type:'set-quiet-hours'/);
   assert.match(script, /archived: archivedResponse\.records/);
 });
 

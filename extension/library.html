@@ -23,6 +23,15 @@
           <input id="notify-toggle" type="checkbox">
           <span>到期时提醒我</span>
         </label>
+        <div class="quiet-hours" title="免打扰时段内，即使有收藏到期也不发通知。一点会安静地等，过了时段再轻轻提醒你。">
+          <label class="quiet-toggle">
+            <input id="quiet-toggle" type="checkbox">
+            <span>免打扰</span>
+          </label>
+          <input id="quiet-start" type="time" aria-label="免打扰开始时间">
+          <span class="quiet-sep" aria-hidden="true">到</span>
+          <input id="quiet-end" type="time" aria-label="免打扰结束时间">
+        </div>
       </div>
     </header>
 

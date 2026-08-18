@@ -1,6 +1,6 @@
 import {
-  addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, isDue, MAX_ENCOUNTERS, MAX_EXCERPT_LENGTH, MAX_STAGE,
-  nextReviewAtFor, normalizeUrl, restartRecord, selectNextDue, sourceDomain, updateRecordUrl
+  addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, inQuietHours, isDue, MAX_ENCOUNTERS, MAX_EXCERPT_LENGTH, MAX_STAGE,
+  nextReviewAtFor, normalizeQuietHours, normalizeUrl, restartRecord, selectNextDue, sourceDomain, updateRecordUrl
 } from './domain.mjs';
 
 const RECORDS_KEY = 'records';
@@ -47,7 +47,13 @@ async function saveArchivedRecords(archived) {
 }
 
 async function getSettings() {
-  return (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY] ?? { reducedMotion: false, notifyOnDue: false };
+  const raw = (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY];
+  const candidate = raw && typeof raw === 'object' ? raw : {};
+  return {
+    reducedMotion: Boolean(candidate.reducedMotion),
+    notifyOnDue: Boolean(candidate.notifyOnDue),
+    quietHours: normalizeQuietHours(candidate.quietHours),
+  };
 }
 
 function isWebUrl(rawUrl) {
@@ -96,18 +102,31 @@ async function syncDerivedState(records) {
 }
 
 // 到期提醒：默认关闭，用户在“我的收藏”里手动开启。用固定 id 重复创建即更新，避免刷屏。
-async function maybeNotifyDue(records = null, now = Date.now()) {
+// 免打扰时段内静默跳过：记录保持到期状态，下次 alarm 或打开扩展时补显示。
+let lastNotifiedRecord = null;
+
+export async function maybeNotifyDue(records = null, now = Date.now()) {
   const settings = await getSettings();
   if (!settings.notifyOnDue) return;
+  if (inQuietHours(settings.quietHours, now)) return;
   const currentRecords = records ?? await getRecords();
-  const dueCount = currentRecords.filter((record) => isDue(record, now)).length;
-  if (!dueCount) return;
+  const record = selectNextDue(currentRecords);
+  if (!record) return;
+  lastNotifiedRecord = record;
   await chrome.notifications.create(DUE_NOTIFICATION_ID, {
     type: 'basic',
     iconUrl: 'icons/icon-128.png',
-    title: '一点来找你了',
-    message: `有 ${dueCount} 份收藏想见你。点开工具栏的一点，再见一面。`,
+    title: record.title,
+    message: '一点想再见它一面。',
   }).catch((error) => console.warn('yidian notification failed', error));
+}
+
+function openNotifiedRecord() {
+  const record = lastNotifiedRecord;
+  lastNotifiedRecord = null;
+  chrome.notifications?.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
+  const url = record && isWebUrl(record.url) ? record.url : chrome.runtime.getURL('library.html');
+  return chrome.tabs.create({ url }).catch(() => undefined);
 }
 
 function isMissingMessageReceiver(error) {
@@ -362,6 +381,12 @@ async function setNotifyOnDue(value) {
   return { ok: true, settings };
 }
 
+async function setQuietHours(value) {
+  const settings = { ...(await getSettings()), quietHours: normalizeQuietHours(value) };
+  await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+  return { ok: true, settings };
+}
+
 export async function handleMessage(message) {
   if (!message || typeof message !== 'object') return { ok: false, error: '无效操作' };
   if (message.type === 'get-pet-state') {
@@ -409,6 +434,7 @@ export async function handleMessage(message) {
   if (message.type === 'set-reduced-motion') return setReducedMotion(message.value);
   if (message.type === 'get-settings') return { ok: true, settings: await getSettings() };
   if (message.type === 'set-notify-on-due') return setNotifyOnDue(message.value);
+  if (message.type === 'set-quiet-hours') return setQuietHours(message.value);
   if (message.type === 'import-records') return importRecords(message.records, message.archived);
   return { ok: false, error: '未知操作' };
 }
@@ -446,7 +472,7 @@ if (globalThis.chrome?.runtime?.onMessage) {
     }
   });
   chrome.notifications?.onClicked.addListener(() => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('library.html') }).catch(() => undefined);
+    openNotifiedRecord();
   });
   chrome.storage.onChanged.addListener((_changes, areaName) => {
     if (areaName === 'local') requestBadgeRefresh();

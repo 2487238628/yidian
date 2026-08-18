@@ -217,10 +217,23 @@ document.querySelector('#import').addEventListener('change', async (event) => {
 });
 
 const notifyToggle = document.querySelector('#notify-toggle');
-async function initNotifyToggle() {
+const quietToggle = document.querySelector('#quiet-toggle');
+const quietStart = document.querySelector('#quiet-start');
+const quietEnd = document.querySelector('#quiet-end');
+
+function applyQuietControls(quietHours) {
+  quietToggle.checked = Boolean(quietHours.enabled);
+  quietStart.value = quietHours.start;
+  quietEnd.value = quietHours.end;
+  quietStart.disabled = !quietHours.enabled;
+  quietEnd.disabled = !quietHours.enabled;
+}
+
+async function initSettings() {
   try {
     const { settings } = await send({ type:'get-settings' });
     notifyToggle.checked = Boolean(settings.notifyOnDue);
+    applyQuietControls(settings.quietHours);
   } catch (error) { showError(error); }
 }
 notifyToggle.addEventListener('change', async () => {
@@ -229,6 +242,22 @@ notifyToggle.addEventListener('change', async () => {
     status.textContent = notifyToggle.checked ? '好，到期时一点会轻轻提醒你。' : '好，一点继续安静地等。';
   } catch (error) { showError(error); notifyToggle.checked = !notifyToggle.checked; }
 });
-initNotifyToggle();
+
+async function saveQuietHours() {
+  try {
+    const result = await send({
+      type:'set-quiet-hours',
+      value:{ enabled:quietToggle.checked, start:quietStart.value, end:quietEnd.value },
+    });
+    applyQuietControls(result.settings.quietHours);
+    status.textContent = quietToggle.checked
+      ? `好，${result.settings.quietHours.start} 到 ${result.settings.quietHours.end} 之间不打扰你。`
+      : '好，到期时一点不再分时段安静。';
+  } catch (error) { showError(error); await initSettings(); }
+}
+quietToggle.addEventListener('change', saveQuietHours);
+quietStart.addEventListener('change', saveQuietHours);
+quietEnd.addEventListener('change', saveQuietHours);
+initSettings();
 
 load().catch(showError);
