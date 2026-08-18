@@ -1,3 +1,4 @@
 output/
 *.zip
 *.bundle
+.playwright-cli/

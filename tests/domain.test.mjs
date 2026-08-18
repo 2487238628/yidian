@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DAY_MS, advanceRecord, createRecord, normalizeUrl, selectNextDue,
-  upsertByNormalizedUrl, updateRecordUrl
+  DAY_MS, ENCOUNTER_COOLDOWN_MS, addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, encounterCount,
+  normalizeUrl, restartRecord, selectNextDue, upsertByNormalizedUrl, updateRecordUrl
 } from '../extension/domain.mjs';
 
 const T0 = Date.UTC(2026, 6, 1, 8);
@@ -61,8 +61,12 @@ test('100% 后终止自动提醒', () => {
   assert.equal(result.record.nextReviewAt, null);
 });
 
-test('URL 去重只移除 fragment，保留 query', () => {
+test('URL 去重移除 fragment 和跟踪参数，但保留业务 query', () => {
   assert.equal(normalizeUrl('https://example.com/doc?q=1#x'), 'https://example.com/doc?q=1');
+  assert.equal(
+    normalizeUrl('https://example.com/doc/?utm_source=feed&q=1&fbclid=x'),
+    'https://example.com/doc?q=1',
+  );
   assert.notEqual(normalizeUrl('https://example.com/doc?q=1'), normalizeUrl('https://example.com/doc?q=2'));
   const original = marked();
   const duplicate = createRecord({ title: '同一页', url: 'https://example.com/doc?q=1#other', now: T0 + 1 });
@@ -70,6 +74,48 @@ test('URL 去重只移除 fragment，保留 query', () => {
   assert.equal(result.created, false);
   assert.equal(result.records.length, 1);
 });
+test('途中偶遇只记录相见，不改变原回看计划', () => {
+  const original = marked({ stage: 2, nextReviewAt: T0 + 6 * DAY_MS });
+  const metAgain = addEncounter(original, { now: T0 + 3 * DAY_MS, excerpt: '后来又看到的一段' });
+  assert.equal(metAgain.stage, 2);
+  assert.equal(metAgain.nextReviewAt, original.nextReviewAt);
+  assert.equal(metAgain.excerpt, '后来又看到的一段');
+  assert.equal(encounterCount(metAgain), 1);
+});
+
+test('刚刚点过只确认已保存，不制造一次偶遇', () => {
+  const original = marked();
+  assert.equal(canAddEncounter(original, T0 + ENCOUNTER_COOLDOWN_MS - 1), false);
+  assert.equal(canAddEncounter(original, T0 + ENCOUNTER_COOLDOWN_MS), true);
+  const noisy = addEncounter(original, { now: T0 + 1 });
+  const cleaned = consolidateRecords([noisy]);
+  assert.equal(cleaned.changed, true);
+  assert.equal(encounterCount(cleaned.records[0]), 0);
+});
+
+test('旧重复项合为一条，并把后一次收藏保留为途中偶遇', () => {
+  const progressed = advanceRecord(marked(), T0 + DAY_MS).record;
+  const duplicate = createRecord({
+    title: '同一文档', url: 'https://example.com/doc/?q=1&utm_source=newsletter',
+    excerpt: '第二次看到', now: T0 + 3 * DAY_MS,
+  });
+  const result = consolidateRecords([progressed, duplicate]);
+  assert.equal(result.records.length, 1);
+  assert.equal(result.mergedCount, 1);
+  assert.equal(result.records[0].stage, 2);
+  assert.equal(result.records[0].nextReviewAt, progressed.nextReviewAt);
+  assert.equal(result.records[0].excerpt, '第二次看到');
+  assert.equal(encounterCount(result.records[0]), 1);
+});
+
+test('完成后可显式开始新一轮', () => {
+  const complete = { ...marked(), stage: 4, nextReviewAt: null };
+  const restarted = restartRecord(complete, T0 + 40 * DAY_MS);
+  assert.equal(restarted.stage, 1);
+  assert.equal(restarted.nextReviewAt, T0 + 41 * DAY_MS);
+  assert.equal(restarted.encounters.at(-1).type, 'restart');
+});
+
 
 test('到期选择按 nextReviewAt、createdAt 排序且只返回一份', () => {
   const a = marked({ normalizedUrl: 'https://a.test/', nextReviewAt: T0, createdAt: T0 + 2 });

@@ -11,6 +11,7 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   const frontMatter = readme.replaceAll('\r\n', '\n').match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
   assert.match(frontMatter, /^sdk: static$/m);
   assert.match(frontMatter, /^entry_file: index\.html$/m);
+  assert.match(frontMatter, /^deployspec:\n  entry_file: index\.html$/m);
   assert.match(frontMatter, /^license: MIT License$/m);
   assert.match(html, /<html lang="zh-CN">/);
   assert.match(html, /<title>一点｜工作与学习的收藏回看工具<\/title>/);
@@ -18,7 +19,7 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /重要的，<br><em>不只见一次。<\/em>/);
   assert.match(html, /<a class="primary" href="#demo">看看怎么用<\/a>/);
   assert.doesNotMatch(html, /<a[^>]+href="#demo"[^>]*>收下一条<\/a>/);
-  assert.match(html, /yidian-1\.0\.0\.zip/);
+  assert.match(html, /yidian-1\.0\.3\.zip/);
   assert.match(html, /不读取未选择的正文，不上传记录，不要求登录/);
   assert.match(html, /id="features"/);
   assert.match(html, /我的收藏/);
@@ -30,14 +31,33 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /到期时，图标旁出现数字。/);
   assert.match(html, /数字表示待回看的收藏数量。不弹窗，不催促；你点开时，一次带回一条。/);
   assert.match(html, /class="github-invite"[^>]*>[\s\S]*让一点继续长大[\s\S]*去点亮 Star ↗/);
-  assert.match(html, /先把一点<br>放进浏览器。/);
+  assert.match(html, /选择适合你的<br>安装方式。/);
   assert.match(html, /microsoftedge\.microsoft\.com\/addons\/detail\/mdpemepjnajchhlagfkpggenllebeacd/);
-  assert.match(html, /Chrome：下载 ZIP 手动安装/);
+  assert.match(html, /下载官网 1\.0\.3/);
+  assert.match(html, /又遇见同一页，记作途中偶遇/);
+  assert.match(html, /相见足迹示意/);
+  assert.match(html, /让一点留在浏览器右上角/);
+  assert.match(html, /刚刚点过，会告诉你“已经记下”/);
+  assert.match(html, /把旧收藏一起带过来/);
+  assert.match(html, /如果你继续使用 Edge 商店版，这里不用看/);
+  assert.match(html, /只有现在下载官网 1\.0\.3/);
+  assert.match(html, /以前用过一点/);
+  assert.match(html, /现在下载官网 1\.0\.3 时才需要/);
+  assert.match(html, /推荐给大多数人/);
+  assert.match(html, /本页展示的是官网 1\.0\.3 最新版/);
+  assert.match(html, /Edge 商店目前还没有更新到这一版/);
+  assert.match(html, /商店版功能可能与本页不同/);
+  assert.match(html, /想先体验新功能/);
+  assert.match(html, /去 Edge 商店安装/);
+  assert.match(html, /旧收藏回来了，一点还记得你们见过几次/);
+  assert.match(html, /同一网页只保留一条/);
+  assert.match(html, /点浏览器右上角的“扩展”（拼图图标）/);
+  assert.match(html, /class="pin-path"/);
   assert.match(html, /class="privacy-link" href="privacy\.html">查看完整隐私政策 →<\/a>/);
-  assert.match(html, /Edge 商店已上线 · Chrome 可手动安装/);
+  assert.match(html, /免费 · 无需登录 · 收藏只在这台电脑里/);
   assert.match(html, /href="contact\.html"/);
   assert.doesNotMatch(html, /Codex|艺术与文化管理研究者|任何浏览器/);
-  await Promise.all(['index.html','contact.html','changelog.html','privacy.html','styles.css','app.js','icon.png','yidian-1.0.0.zip'].map((file) => access(new URL(file, studio))));
+  await Promise.all(['index.html','contact.html','changelog.html','privacy.html','styles.css','app.js','icon.png','yidian-1.0.3.zip'].map((file) => access(new URL(file, studio))));
 });
 
 test('创空间互动演示含四阶段成长和真实指针拖动', async () => {
@@ -49,6 +69,12 @@ test('创空间互动演示含四阶段成长和真实指针拖动', async () =>
   assert.match(script, /pointerdown/);
   assert.match(script, /pointermove/);
   assert.match(script, /setPointerCapture/);
+  assert.match(script, /reading-journey/);
+  assert.match(script, /prefers-reduced-motion:no-preference/);
+  assert.match(script, /requestAnimationFrame/);
+  assert.match(script, /看看第 2 天/);
+  assert.match(script, /看看第 7 天/);
+  assert.match(script, /看看第 30 天/);
 });
 
 test('反馈与联系页只保留受众需要的反馈、关注和作者入口', async () => {
@@ -73,10 +99,21 @@ test('我的收藏用状态、动作和结果解释回看流程', async () => {
     readFile(new URL('extension/library.js', repo), 'utf8'),
   ]);
   assert.match(html, /点击浏览器工具栏里的“一点”完成回看/);
+  assert.match(html, /下次回看的具体时间/);
   assert.match(html, /今天待回看/);
-  assert.match(html, /已完成 4 次相见/);
+  assert.match(html, /每条内容共 4 步：收下 1 次，再回看 3 次/);
+  assert.match(html, /已完成回看计划/);
   assert.match(html, /打开原网页/);
-  assert.match(script, /已完成 \$\{record\.stage\}\/4 次/);
+  assert.match(html, /按关系状态查看/);
+  assert.match(html, /相见足迹/);
+  assert.match(script, /途中偶遇.*原来的计划一直在继续/);
+  assert.match(html, /只有同时安装“商店版”和“手动版”时/);
+  assert.match(html, /开启旧版，关闭新版/);
+  assert.match(html, /导入会按网页合并/);
+  assert.match(script, /进度 \$\{record\.stage\}\/4/);
+  assert.match(script, /hour: '2-digit'/);
+  assert.match(script, /minute: '2-digit'/);
+  assert.match(script, /后可回看/);
   assert.doesNotMatch(`${html}\n${script}`, /今天可回来|已经长成 · 100%|收下一条就已经完成 25%/);
 });
 
@@ -94,10 +131,18 @@ test('GitHub 反馈入口区分使用问题和功能建议', async () => {
 test('更新记录页公开当前版本和反馈去向', async () => {
   const html = await read('changelog.html');
   assert.match(html, /<title>更新记录 · 一点<\/title>/);
+  assert.match(html, /1\.0\.3 · 一点说话更像一点/);
+  assert.match(html, /1\.0\.1 · 说清楚四步/);
+  assert.match(html, /1\.0\.2 · 把重复收藏改成途中偶遇/);
   assert.match(html, /1\.0\.0 · 第一版/);
+  assert.match(html, /2026-07-30/);
+  assert.match(html, /2026-08-02/);
+  assert.match(html, /2026-08-03/);
   assert.match(html, /2026-07-28/);
   assert.match(html, /第 1 天收下，第 2、7、30 天/);
   assert.match(html, /不弹窗，也不强制打扰/);
+  assert.match(html, /旧的重复收藏会自动合成一条/);
+  assert.match(html, /已在 Edge 中验证收藏、偶遇、导入和回看流程/);
   assert.match(html, /contact\.html#feedback/);
 });
 
@@ -109,7 +154,9 @@ test('隐私页准确说明本地数据和最小权限边界', async () => {
   assert.match(html, /不把收藏记录上传到服务器/);
   assert.match(html, /未选中的网页正文不会被保存/);
   assert.match(html, /读取当前标签页/);
-  assert.match(html, /闹钟/);
+  assert.match(html, /定时检查/);
+  assert.match(html, /导出备份文件/);
+  assert.doesNotMatch(html, /JSON 备份/);
   assert.match(html, /本地存储/);
   assert.match(html, /contact\.html#feedback/);
   assert.doesNotMatch(html, /云同步已经|自动收集|第三方分析/);
@@ -122,4 +169,28 @@ test('创空间不依赖远程脚本、字体或追踪器', async () => {
   assert.match(html, /Content-Security-Policy/);
   assert.match(html, /script-src 'self'/);
   assert.doesNotMatch(html, /unsafe-inline|unsafe-eval/);
+});
+
+
+test('官网可以安装为 PWA，并在更新准备好后由用户确认刷新', async () => {
+  const [html, manifestText, worker, pwa] = await Promise.all([
+    read('index.html'),
+    read('manifest.webmanifest'),
+    read('service-worker.js'),
+    read('pwa.js'),
+  ]);
+  const manifest = JSON.parse(manifestText);
+  assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.start_url, './');
+  assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ['192x192', '512x512']);
+  assert.match(html, /rel="manifest" href="manifest\.webmanifest"/);
+  assert.match(html, /data-install-app hidden>安装到电脑/);
+  assert.match(html, /把一点装到电脑/);
+  assert.match(html, /收下当前网页仍需浏览器扩展/);
+  assert.match(worker, /addEventListener\('fetch'/);
+  assert.match(worker, /caches\.match\('.\/index\.html'\)/);
+  assert.match(worker, /SKIP_WAITING/);
+  assert.match(pwa, /beforeinstallprompt/);
+  assert.match(pwa, /一点长大了一点/);
+  await Promise.all(['manifest.webmanifest', 'service-worker.js', 'pwa.js', 'icon-192.png', 'icon-512.png'].map((file) => access(new URL(file, studio))));
 });
