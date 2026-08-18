@@ -444,9 +444,23 @@ async function handleToolbarClick(tab) {
   await showPetOnTab(tab, selectNextDue(records) ? 'review' : 'current');
 }
 
+// 侧边栏入口：快捷键 open-side-panel。把当前页上下文写进 session 存储，
+// 让侧边栏知道该看哪一页；sidePanel.open 必须留在用户手势调用栈里。
+async function openSidePanel(tab) {
+  if (!Number.isInteger(tab?.windowId)) return;
+  const page = tab.url && isWebUrl(tab.url) ? { title: tab.title ?? '', url: tab.url } : null;
+  await chrome.storage.session.set({
+    [`entryContext:${tab.windowId}`]: { mode: 'current', page, openedAt: Date.now() },
+  });
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+}
+
 export async function handleCommand(command, tab) {
-  if (command !== 'open-current-document') return;
-  await showPetOnTab(tab, 'current');
+  if (command === 'open-current-document') {
+    await showPetOnTab(tab, 'current');
+    return;
+  }
+  if (command === 'open-side-panel') await openSidePanel(tab);
 }
 
 if (globalThis.chrome?.runtime?.onMessage) {
