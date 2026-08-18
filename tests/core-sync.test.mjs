@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
-  createRecord, inQuietHours, matchesRecordQuery, normalizeQuietHours, summarizeRecords,
+  createRecord, inQuietHours, matchesRecordQuery, normalizeQuietHours, recordsToMarkdown, summarizeRecords,
 } from '../core/domain.mjs';
 import { createJsonFileAdapter, createMemoryAdapter, mergeSettings } from '../core/adapter.mjs';
 
@@ -118,4 +118,18 @@ test('JSON 文件适配器与扩展备份格式同构且缺失文件时回退空
   const next = JSON.parse(store.get('/tmp/yidian.json'));
   assert.equal(next.records.length, 1, '写设置不覆盖记录');
   assert.equal(next.settings.reducedMotion, true);
+});
+
+test('recordsToMarkdown 输出 frontmatter、选段与足迹，Obsidian 可直接入库', () => {
+  const record = { ...baseRecord({ excerpt: '值得再见的一段' }), encounters: [{ type: 'review', at: at(15, 0), stage: 2 }] };
+  const archived = { ...baseRecord({ title: '长成[归档]的笔记', url: 'https://example.com/done' }), stage: 4 };
+  const markdown = recordsToMarkdown({ records: [record], archived: [archived], exportedAt: '2026-08-19T00:00:00.000Z' });
+  assert.match(markdown, /^---\nsource: yidian\nexportedAt: 2026-08-19T00:00:00\.000Z\ntotal: 2\n---/);
+  assert.match(markdown, /## \[示例文章\]\(https:\/\/example\.com\/doc\)/);
+  assert.match(markdown, /- status: 进行中/);
+  assert.match(markdown, /> 值得再见的一段/);
+  assert.match(markdown, /### 足迹/);
+  assert.match(markdown, /- 2026-08-18 回看（2\/4）/);
+  assert.match(markdown, /## \[长成 归档 的笔记\]/, '标题里的方括号被清掉，避免破坏 Obsidian 链接语法');
+  assert.match(markdown, /- status: 已归档/);
 });

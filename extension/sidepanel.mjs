@@ -3,7 +3,7 @@ import { isDue, MAX_STAGE } from './domain.mjs';
 const elements = Object.fromEntries(
   [
     'mode-label', 'pet', 'progress-text', 'meter-fill', 'source',
-    'document-title', 'status-copy', 'next-review', 'primary-action',
+    'document-title', 'status-copy', 'excerpt', 'next-review', 'primary-action',
     'open-original', 'manage', 'url-input', 'save-url', 'delete-record',
     'live-status', 'reduced-motion',
   ].map((id) => [id, document.getElementById(id)]),
@@ -110,6 +110,9 @@ function render() {
 
   elements['status-copy'].textContent = views.copy;
   elements['next-review'].textContent = views.next;
+  const excerptText = String(record?.excerpt || '').trim();
+  elements.excerpt.textContent = excerptText ? `“${excerptText}”` : '';
+  elements.excerpt.hidden = !excerptText;
   elements['primary-action'].textContent = views.action;
   setVisible(elements['primary-action'], Boolean(views.action));
 }

@@ -1,4 +1,4 @@
-import { matchesRecordQuery } from './domain.mjs';
+import { matchesRecordQuery, recordsToMarkdown } from './domain.mjs';
 
 const recordsRoot = document.querySelector('#records');
 const status = document.querySelector('#status');
@@ -76,16 +76,26 @@ function render(records) {
     migrationGuide.dataset.seen = 'true';
   }
   if (!visibleRecords.length) {
-    const empty = document.createElement('p');
+    const empty = document.createElement('div');
     empty.className = 'empty';
     if (archivedView) {
       empty.textContent = currentArchived.length
         ? '归档里没有符合搜索的内容。'
         : '还没有归档。点“归档已完成”，完成回看计划的收藏会收进这里，随时可以带回来。';
+    } else if (!source.length) {
+      const strong = document.createElement('strong');
+      strong.textContent = '还没有收藏。三十秒走一遍：';
+      const steps = document.createElement('ol');
+      steps.className = 'empty-steps';
+      steps.innerHTML = '<li>打开任意普通网页，点工具栏里的“一点”；</li><li>在弹出的卡片里点“替我收好”；</li><li>第 2 天，一点会带它回来见你。见过四次，它长成归档——这里不会变成只进不出的坟墓。</li>';
+      const kbdNote = document.createElement('p');
+      kbdNote.className = 'empty-kbd';
+      const kbd = document.createElement('kbd');
+      kbd.textContent = 'Ctrl+Shift+Y';
+      kbdNote.append('快捷键 ', kbd, ' 也能随时收下当前页。');
+      empty.append(strong, steps, kbdNote);
     } else {
-      empty.textContent = source.length
-        ? '这里暂时没有内容。换一个关系状态看看。'
-        : '还没有收藏。去任意普通网页点击“一点”图标，再点“收下这条”。';
+      empty.textContent = '这里暂时没有内容。换一个关系状态看看。';
     }
     recordsRoot.append(empty);
     return;
@@ -197,6 +207,24 @@ document.querySelector('#export').addEventListener('click', async () => {
     status.textContent = archivedResponse.records.length
       ? `已导出 ${response.records.length} 份记录（另含 ${archivedResponse.records.length} 份归档）`
       : `已导出 ${response.records.length} 份记录`;
+  } catch (error) { showError(error); }
+});
+
+document.querySelector('#export-markdown').addEventListener('click', async () => {
+  try {
+    const [response, archivedResponse] = await Promise.all([
+      send({ type:'list-records' }),
+      send({ type:'list-archived' }),
+    ]);
+    const markdown = recordsToMarkdown({ records: response.records, archived: archivedResponse.records });
+    const blob = new Blob([markdown], { type:'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `yidian-${new Date().toISOString().slice(0,10)}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    status.textContent = '已导出 Markdown，可直接放进 Obsidian 或任何笔记库。';
   } catch (error) { showError(error); }
 });
 

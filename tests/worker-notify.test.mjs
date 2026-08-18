@@ -103,6 +103,26 @@ test('提醒关闭或没有到期记录时不发通知', async () => {
   assert.equal(state.calls.notifications.length, 0);
 });
 
+test('多条到期时发一条计数 digest，点击进收藏库，且当天不重复发', async () => {
+  const state = chromeMock();
+  const { maybeNotifyDue } = await loadWorker('notify-digest');
+  const now = at(12, 0);
+  state.local.settings = { notifyOnDue: true };
+  const records = [
+    dueRecord('第一篇', 'https://note.example/a', now),
+    dueRecord('第二篇', 'https://note.example/b', now),
+  ];
+  await maybeNotifyDue(records, now);
+  assert.equal(state.calls.notifications.length, 1);
+  assert.equal(state.calls.notifications[0].options.title, '一点');
+  assert.equal(state.calls.notifications[0].options.message, '今天有 2 位老朋友想见你。');
+  await maybeNotifyDue(records, now + 3_600_000);
+  assert.equal(state.calls.notifications.length, 1, '同一天多条到期只发一条 digest');
+  state.listeners.notificationClicked();
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.deepEqual(state.calls.opened, [{ url: 'edge-extension://test/library.html' }]);
+});
+
 test('点击通知直达原网页，并清掉这条通知', async () => {
   const state = chromeMock();
   const { maybeNotifyDue } = await loadWorker('notify-click');

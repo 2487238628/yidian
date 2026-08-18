@@ -5,7 +5,7 @@ import { createRecord, normalizeUrl } from '../extension/domain.mjs';
 
 const ids = [
   'mode-label', 'pet', 'progress-text', 'meter-fill', 'source',
-  'document-title', 'status-copy', 'next-review', 'primary-action',
+  'document-title', 'status-copy', 'excerpt', 'next-review', 'primary-action',
   'open-original', 'manage', 'url-input', 'save-url', 'delete-record',
   'live-status', 'reduced-motion',
 ];
@@ -77,13 +77,22 @@ test('四态面板：未收下时给出收下动作且宠物为空', async () =>
 });
 
 test('四态面板：等待回看时显示下次时间且不催促', async () => {
-  const record = createRecord({ title: page.title, url: page.url, now });
+  const record = { ...createRecord({ title: page.title, url: page.url, now }), excerpt: '当初收下它的那一段' };
   const { elements } = await loadPanel({ context: { mode: 'current', page }, records: [record] });
   assert.equal(elements.pet.dataset.stage, '1');
   assert.equal(elements['progress-text'].textContent, '25% · 第 1 次见面');
   assert.match(elements['next-review'].textContent, /下次回看：/);
   assert.equal(elements['primary-action'].hidden, true, '等待期不提供动作');
   assert.match(elements['status-copy'].textContent, /不用惦记/);
+  assert.equal(elements.excerpt.textContent, '“当初收下它的那一段”', '回看前先见选段');
+  assert.equal(elements.excerpt.hidden, false);
+});
+
+test('四态面板：没有选段时不显示选段块', async () => {
+  const record = createRecord({ title: page.title, url: page.url, now });
+  const { elements } = await loadPanel({ context: { mode: 'current', page }, records: [record] });
+  assert.equal(elements.excerpt.textContent, '');
+  assert.equal(elements.excerpt.hidden, true);
 });
 
 test('四态面板：到期时给出“见一面”动作', async () => {

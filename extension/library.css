@@ -29,7 +29,8 @@ h1 { margin:0; font-size:clamp(32px,6vw,56px); line-height:1; letter-spacing:-.0
 .quiet-hours input[type="time"] { min-height:30px; padding:3px 6px; border:1px solid #d9ddd9; border-radius:9px; background:#fffdf7; color:#24342f; font:12px/1 inherit; }
 .quiet-hours input:disabled { opacity:.45; cursor:default; }
 .quiet-sep { color:#8a9691; font-size:12px; }
-.summary-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 10px; margin:30px 0 20px; color:#667670; font-size:13px; }
+.summary-line { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 10px; margin:0 0 20px; color:#667670; font-size:13px; }
+.gentle-note { margin:26px 0 10px; color:#8a9691; font-size:12.5px; line-height:1.7; }
 .summary-line strong { margin-right:4px; color:#24342f; font-size:16px; }
 .summary-line i { color:#c2ccc6; font-style:normal; }
 .search { display:block; margin:0 0 12px; }
@@ -84,5 +85,9 @@ h1 { margin:0; font-size:clamp(32px,6vw,56px); line-height:1; letter-spacing:-.0
 .record-actions .restore[hidden] { display:none; }
 .record-actions .delete { color:#9c4639; }
 .empty { padding:72px 24px; border:1px dashed #ccd4cf; border-radius:20px; color:#667670; text-align:center; background:#fffdf7; }
+.empty strong { display:block; margin-bottom:10px; color:#394b45; font-size:14px; }
+.empty-steps { margin:0 0 10px; padding:0 0 0 20px; color:#667670; font-size:13px; line-height:1.9; text-align:left; }
+.empty-kbd { margin:0; color:#8a9691; font-size:12px; }
+.empty kbd { padding:2px 7px; border:1px solid #d9ddd9; border-bottom-width:2px; border-radius:7px; background:#fff; color:#394b45; font:12px/1 inherit; }
 @media (max-width:760px) { header { align-items:flex-start; flex-direction:column; } .list-bar { flex-direction:column; align-items:flex-start; } .migration-path { grid-template-columns:1fr; gap:22px; } .migration-path li:not(:last-child)::after { top:auto; right:50%; bottom:-20px; transform:translateX(50%) rotate(90deg); } .record { grid-template-columns:1fr; gap:14px; } .record-actions button { flex:1; } .footprints li { grid-template-columns:1fr; gap:2px; } }
 @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }

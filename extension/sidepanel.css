@@ -102,6 +102,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible {
 .progress-text { margin: 4px 0 12px; font-weight: 700; }
 h1 { margin: 6px 0 10px; font-size: 22px; line-height: 1.25; overflow-wrap: anywhere; }
 .status-copy, .next-review { color: var(--muted); line-height: 1.6; }
+.excerpt { margin:10px 0 0; padding:10px 12px; border-left:3px solid var(--mint); background:rgba(105,181,157,.12); color:#394b45; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
 .actions, .manage-actions { display: grid; gap: 10px; margin-top: 16px; }
 button {
   border: 0;

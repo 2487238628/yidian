@@ -103,29 +103,42 @@ async function syncDerivedState(records) {
 
 // 到期提醒：默认关闭，用户在“我的收藏”里手动开启。用固定 id 重复创建即更新，避免刷屏。
 // 免打扰时段内静默跳过：记录保持到期状态，下次 alarm 或打开扩展时补显示。
+// digest 口径：多条到期时每天只发一条计数通知，点击进收藏库；单条才直达原网页。
 let lastNotifiedRecord = null;
+let lastNotifiedMany = false;
+let lastDigestDay = '';
 
 export async function maybeNotifyDue(records = null, now = Date.now()) {
   const settings = await getSettings();
   if (!settings.notifyOnDue) return;
   if (inQuietHours(settings.quietHours, now)) return;
   const currentRecords = records ?? await getRecords();
+  const dueRecords = currentRecords.filter((record) => isDue(record, now));
+  if (!dueRecords.length) return;
+  const many = dueRecords.length > 1;
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (many && lastDigestDay === day) return;
+  if (many) lastDigestDay = day;
   const record = selectNextDue(currentRecords);
-  if (!record) return;
-  lastNotifiedRecord = record;
+  lastNotifiedRecord = many ? null : record;
+  lastNotifiedMany = many;
   await chrome.notifications.create(DUE_NOTIFICATION_ID, {
     type: 'basic',
     iconUrl: 'icons/icon-128.png',
-    title: record.title,
-    message: '一点想再见它一面。',
+    title: many ? '一点' : record.title,
+    message: many
+      ? `今天有 ${dueRecords.length} 位老朋友想见你。`
+      : '一点想再见它一面。',
   }).catch((error) => console.warn('yidian notification failed', error));
 }
 
 function openNotifiedRecord() {
   const record = lastNotifiedRecord;
+  const many = lastNotifiedMany;
   lastNotifiedRecord = null;
+  lastNotifiedMany = false;
   chrome.notifications?.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
-  const url = record && isWebUrl(record.url) ? record.url : chrome.runtime.getURL('library.html');
+  const url = !many && record && isWebUrl(record.url) ? record.url : chrome.runtime.getURL('library.html');
   return chrome.tabs.create({ url }).catch(() => undefined);
 }
 

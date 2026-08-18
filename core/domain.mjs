@@ -287,3 +287,38 @@ export function summarizeRecords(records) {
     .map(([domain, count]) => ({ domain, count }));
   return { total: list.length, completed, encounters, topDomains };
 }
+
+// Markdown 序列化：每条记录一段，frontmatter 元信息 + 选段 + 足迹。
+// 跨宿主共用：扩展导出、CLI、Obsidian 插件都走这一份输出。
+const EVENT_LABELS = { saved: '收下', review: '回看', encounter: '途中偶遇', restart: '重新开始' };
+
+export function recordsToMarkdown({ records = [], archived = [], exportedAt = new Date().toISOString() } = {}) {
+  const day = (value) => (Number.isFinite(value) ? new Date(value).toISOString().slice(0, 10) : '');
+  const section = (record, status) => {
+    const lines = [
+      `## [${String(record.title || '未命名').replace(/[[\]]/g, ' ')}](${record.url})`,
+      '',
+      `- status: ${status}`,
+      `- stage: ${record.stage}/${MAX_STAGE}`,
+      `- domain: ${record.sourceDomain}`,
+      `- savedAt: ${day(record.createdAt)}`,
+    ];
+    const excerpt = String(record.excerpt || '').trim();
+    if (excerpt) lines.push('', `> ${excerpt}`);
+    const events = Array.isArray(record.encounters) ? record.encounters : [];
+    if (events.length) {
+      lines.push('', '### 足迹', '');
+      for (const event of events) {
+        lines.push(`- ${day(event.at)} ${EVENT_LABELS[event.type] || event.type}（${event.stage}/${MAX_STAGE}）`);
+      }
+    }
+    return lines.join('\n');
+  };
+  const blocks = [
+    ['---', 'source: yidian', `exportedAt: ${exportedAt}`, `total: ${records.length + archived.length}`, '---'].join('\n'),
+    '# 一点 · 收藏备份',
+    ...records.map((record) => section(record, record.stage >= MAX_STAGE ? '长成' : '进行中')),
+    ...archived.map((record) => section(record, '已归档')),
+  ];
+  return `${blocks.join('\n\n')}\n`;
+}
