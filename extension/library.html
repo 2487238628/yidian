@@ -12,10 +12,10 @@
       <div>
         <p class="eyebrow">一点｜工作与学习的收藏回看工具</p>
         <h1>我的收藏</h1>
-        <p class="intro">这里保存你收下的网页和选段。每条内容共 4 步：收下 1 次，再回看 3 次。你可以查看下次回看的具体时间；到期时，点击浏览器工具栏里的“一点”完成回看。</p>
+        <p class="gentle-note">没看完、忘了回看，都没关系。这里不是待办清单，一点只负责把它们轻轻带回来见你。</p>
       </div>
       <div class="tools" aria-label="记录工具">
-        <a class="tool-link" href="stats.html">温柔的统计</a>
+        <a class="tool-link" href="stats.html">统计</a>
         <details class="tool-menu">
           <summary>提醒设置</summary>
           <div class="tool-menu-body">
@@ -46,7 +46,10 @@
       </div>
     </header>
 
-    <p class="gentle-note">没看完、忘了回看，都没关系。这里不是待办清单，一点只负责把它们轻轻带回来见你。</p>
+    <details class="howto">
+      <summary>一点怎么用？</summary>
+      <p class="intro">这里保存你收下的网页和选段。每条内容共 4 步：收下 1 次，再回看 3 次。你可以查看下次回看的具体时间；到期时，点击浏览器工具栏里的“一点”完成回看。</p>
+    </details>
 
     <p class="summary-line" aria-label="收藏概览">
       <span><strong id="total">0</strong>条收藏</span><i aria-hidden="true">·</i>
@@ -55,21 +58,21 @@
       <span><strong id="encounters">0</strong>途中偶遇</span>
     </p>
 
-    <label class="search">
-      <input id="search" type="search" placeholder="搜索标题、域名或选段" aria-label="搜索收藏">
-    </label>
-
-    <div class="list-bar">
-      <nav class="filters" aria-label="按关系状态查看">
-        <button class="active" type="button" data-filter="all" aria-pressed="true">全部</button>
-        <button type="button" data-filter="due" aria-pressed="false">今天要见</button>
-        <button type="button" data-filter="active" aria-pressed="false">正在相见</button>
-        <button type="button" data-filter="encountered" aria-pressed="false">途中偶遇</button>
-        <button type="button" data-filter="complete" aria-pressed="false">已完成</button>
-        <button type="button" data-filter="archived" aria-pressed="false">已归档</button>
-      </nav>
+    <div class="toolbar">
+      <label class="search">
+        <input id="search" type="search" placeholder="搜索标题、域名或选段" aria-label="搜索收藏">
+      </label>
       <button id="archive-grown" class="archive" type="button" disabled title="把已完成回看计划的收藏收进归档，随时可在“已归档”里找回">归档已完成</button>
     </div>
+
+    <nav class="filters" aria-label="按关系状态查看">
+      <button class="active" type="button" data-filter="all" aria-pressed="true">全部</button>
+      <button type="button" data-filter="due" aria-pressed="false">今天要见</button>
+      <button type="button" data-filter="active" aria-pressed="false">正在相见</button>
+      <button type="button" data-filter="encountered" aria-pressed="false">途中偶遇</button>
+      <button type="button" data-filter="complete" aria-pressed="false">已完成</button>
+      <button type="button" data-filter="archived" aria-pressed="false">已归档</button>
+    </nav>
 
     <p id="status" role="status" aria-live="polite"></p>
     <section id="records" class="records" aria-label="收藏记录"></section>

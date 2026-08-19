@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-test('温柔统计只汇总已发生的事实，口径与 summarizeRecords 一致', async () => {
+test('回看统计只汇总已发生的事实，口径与 summarizeRecords 一致', async () => {
   const [html, script] = await Promise.all([
     readFile(new URL('../extension/stats.html', import.meta.url), 'utf8'),
     readFile(new URL('../extension/stats.js', import.meta.url), 'utf8'),
   ]);
-  assert.match(html, /<title>一点 · 温柔的统计<\/title>/);
+  assert.match(html, /<title>一点 · 回看统计<\/title>/);
   assert.match(html, /id="total"/);
   assert.match(html, /id="completed"/);
   assert.match(html, /id="encounters"/);
@@ -37,5 +37,5 @@ test('统计页坚持无压力设计：没有连胜、倒计时、排名或外�
 test('收藏库提供统计页入口', async () => {
   const html = await readFile(new URL('../extension/library.html', import.meta.url), 'utf8');
   assert.match(html, /href="stats\.html"/);
-  assert.match(html, /温柔的统计/);
+  assert.match(html, /href="stats\.html">统计</);
 });
