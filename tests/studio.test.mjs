@@ -30,8 +30,12 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /<img src="icon\.png" alt=""><i>1<\/i>/);
   assert.match(html, /到期时，图标旁出现数字。/);
   assert.match(html, /数字表示待回看的收藏数量。不弹窗，不催促；你点开时，一次带回一条。/);
-  assert.match(html, /class="github-invite"[^>]*>[\s\S]*让一点继续长大[\s\S]*去点亮 Star ↗/);
-  assert.match(html, /选择适合你的<br>安装方式。/);
+  assert.match(html, /id="updates"/);
+  assert.match(html, /1\.3\.0 更新速览 · 2026-08-19/);
+  assert.match(html, /这一版，不只换了<br>一个版本号。/);
+  assert.match(html, /更安静[\s\S]*更好找[\s\S]*更好想起[\s\S]*更好带走/);
+  assert.match(html, /href="changelog\.html">查看完整更新记录 →<\/a>/);
+  assert.match(html, /先选版本，<br>再照着装。/);
   assert.match(html, /microsoftedge\.microsoft\.com\/addons\/detail\/mdpemepjnajchhlagfkpggenllebeacd/);
   assert.match(html, /下载官网 1\.3\.0/);
   assert.match(html, /途中偶遇 2 次/);
@@ -43,11 +47,11 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /只有改用官网 1\.3\.0/);
   assert.match(html, /以前用过一点/);
   assert.match(html, /从商店版改用官网 1\.3\.0 时才需要/);
-  assert.match(html, /推荐给大多数人/);
+  assert.match(html, /推荐给大多数人 · 自动更新/);
   assert.match(html, /官网手动版已更新到 1\.3\.0/);
   assert.match(html, /Edge 商店目前仍是 1\.0\.1/);
   assert.match(html, /功能会少一些/);
-  assert.match(html, /想先体验新功能/);
+  assert.match(html, /完整新功能 · 手动安装/);
   assert.match(html, /去 Edge 商店安装/);
   assert.match(html, /旧收藏回来了，一点还记得你们见过几次/);
   assert.match(html, /同一网页只保留一条/);
@@ -151,6 +155,8 @@ test('GitHub 反馈入口区分使用问题和功能建议', async () => {
 test('更新记录页公开当前版本和反馈去向', async () => {
   const html = await read('changelog.html');
   assert.match(html, /<title>更新记录 · 一点<\/title>/);
+  assert.match(html, /1\.3\.0 · 更温柔的回看/);
+  assert.match(html, /1\.2\.0 · 收藏库、免打扰、统计与侧边栏/);
   assert.match(html, /1\.0\.3 · 一点说话更像一点/);
   assert.match(html, /1\.0\.1 · 说清楚四步/);
   assert.match(html, /1\.0\.2 · 把重复收藏改成途中偶遇/);
@@ -192,7 +198,7 @@ test('创空间不依赖远程脚本、字体或追踪器', async () => {
 });
 
 
-test('官网可以安装为 PWA，并在更新准备好后由用户确认刷新', async () => {
+test('官网保留 PWA 离线外壳，但首页不把它混作浏览器扩展', async () => {
   const [html, manifestText, worker, pwa] = await Promise.all([
     read('index.html'),
     read('manifest.webmanifest'),
@@ -204,9 +210,7 @@ test('官网可以安装为 PWA，并在更新准备好后由用户确认刷新'
   assert.equal(manifest.start_url, './');
   assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ['192x192', '512x512']);
   assert.match(html, /rel="manifest" href="manifest\.webmanifest"/);
-  assert.match(html, /data-install-app hidden>安装到电脑/);
-  assert.match(html, /把一点装到电脑/);
-  assert.match(html, /收下当前网页仍需浏览器扩展/);
+  assert.doesNotMatch(html, /data-install-app|把一点装到电脑|安装官网应用/);
   assert.match(worker, /addEventListener\('fetch'/);
   assert.match(worker, /caches\.match\('.\/index\.html'\)/);
   assert.match(worker, /SKIP_WAITING/);
