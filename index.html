@@ -11,7 +11,7 @@
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <div class="reading-journey" aria-hidden="true">
@@ -23,7 +23,7 @@
   <nav class="nav" aria-label="主导航">
     <a class="brand" href="#top" aria-label="一点首页"><img class="brand-icon" src="icon.png" alt="">一点</a>
     <div class="nav-links">
-      <a href="#features">功能</a><a href="#privacy">隐私</a><a href="#install">安装</a><a href="changelog.html">更新</a><a class="nav-feedback" href="contact.html#feedback">反馈</a>
+      <a href="#features">功能</a><a href="#updates">更新记录</a><a href="#privacy">隐私</a><a href="#install">安装</a><a class="nav-feedback" href="contact.html#feedback">反馈</a>
       <a class="nav-download" href="#install">安装一点</a>
     </div>
   </nav>
@@ -37,7 +37,6 @@
         <div class="hero-actions">
           <a class="primary" href="#demo">看看怎么用</a>
           <a class="secondary" href="#install">选择安装方式</a>
-          <button class="secondary pwa-install" type="button" data-install-app hidden>安装到电脑</button>
         </div>
         <p class="microcopy">免费 · 无需登录 · 收藏只在这台电脑里</p>
         <a class="visit-proof" href="https://www.modelscope.cn/studios/endTree26/yidian" target="_blank" rel="noopener noreferrer" aria-label="查看一点的 ModelScope 创空间">
@@ -126,6 +125,29 @@
       </div>
     </section>
 
+    <section id="updates" class="updates" aria-labelledby="updates-title">
+      <div class="updates-heading">
+        <div>
+          <p class="section-tag">1.3.0 更新速览 · 2026-08-19</p>
+          <h2 id="updates-title">这一版，不只换了<br>一个版本号。</h2>
+        </div>
+        <div class="updates-intro">
+          <p>1.2.0 把收藏库、免打扰、统计和侧边栏补齐；1.3.0 继续把提醒、回看和导出做得更安静、更顺手。</p>
+          <a href="changelog.html">查看完整更新记录 →</a>
+        </div>
+      </div>
+      <div class="update-grid">
+        <article><span>更安静</span><h3>多条到期，每天只提醒一次</h3><p>一条时直达原网页，多条时只显示计数并进入收藏库；默认免打扰时段仍是 22:00–08:00。</p></article>
+        <article><span>更好找</span><h3>搜索、归档和统计都在收藏库</h3><p>按标题、域名或选段搜索；完成内容可以归档，只统计真正发生过的收藏与相见。</p></article>
+        <article><span>更好想起</span><h3>回看前，先看到当初的选段</h3><p>侧边栏先带回你保存的那段文字；第一次打开收藏库，也会有一份三十秒上手指引。</p></article>
+        <article><span>更好带走</span><h3>除了备份，也能导出 Markdown</h3><p>每条记录带来源、选段和相见足迹，可直接放进 Obsidian 或其他笔记库。</p></article>
+      </div>
+      <div class="updates-foot">
+        <p><strong>更新记录一直都在。</strong>从 1.0.0 到 1.3.0，每一版做了什么、修了什么，都按日期留下来了。</p>
+        <a href="https://github.com/endtree-FDE/yidian" target="_blank" rel="noopener noreferrer">在 GitHub 看项目 ↗</a>
+      </div>
+    </section>
+
     <section id="privacy" class="privacy">
       <div class="privacy-seal"><strong>LOCAL</strong><span>本地优先</span></div>
       <div>
@@ -146,39 +168,27 @@
     </section>
 
     <section id="install" class="install">
-      <div class="install-copy">
+      <div class="install-heading">
         <p class="section-tag">两种安装方式</p>
-        <h2>选择适合你的<br>安装方式。</h2>
-        <p class="install-lead">想省心自动更新，选 Edge 商店；想先用完整的新功能，下载官网 1.3.0。</p>
-        <aside class="pwa-choice" aria-labelledby="pwa-choice-title">
-          <div>
-            <span>官网应用 · 自动更新</span>
-            <h3 id="pwa-choice-title">把一点装到电脑</h3>
-            <p>像应用一样单独打开；官网重新部署后，下次打开会准备新版，不必等待商店审核。收下当前网页仍需浏览器扩展。</p>
-          </div>
-          <button class="secondary" type="button" data-install-app>安装官网应用</button>
-          <small data-install-help hidden>如果没有弹出安装窗口，请用 Edge 或 Chrome 打开<a href="https://endtree26-yidian.ms.show/" target="_blank" rel="noopener noreferrer">独立体验网址</a>，再点地址栏右侧的安装图标。</small>
-        </aside>
-        <div class="install-choices" aria-label="选择安装方式">
-          <article class="install-choice recommended">
-            <span>推荐给大多数人</span>
-            <h3>从 Edge 商店安装 1.0.1</h3>
-            <p>安装最简单，以后会自动更新；包含收下、按期回看和本地收藏等基础功能。</p>
-            <a class="primary" href="https://microsoftedge.microsoft.com/addons/detail/mdpemepjnajchhlagfkpggenllebeacd" target="_blank" rel="noopener noreferrer">去 Edge 商店安装</a>
-          </article>
-          <article class="install-choice latest">
-            <span>想先体验新功能</span>
-            <h3>下载官网 1.3.0</h3>
-            <p>包含搜索归档、免打扰、统计、侧边栏、每日摘要和 Markdown 导出。</p>
-            <a class="secondary" href="yidian-1.3.0.zip" download>下载官网 1.3.0</a>
-          </article>
-        </div>
-        <a class="github-invite" href="https://github.com/endtree-FDE/yidian" target="_blank" rel="noopener noreferrer">
-          <span aria-hidden="true">★</span><span><strong>让一点继续长大</strong><small>觉得有用，欢迎在 GitHub 留下一颗 Star。</small></span><b>去点亮 Star ↗</b>
-        </a>
+        <h2>先选版本，<br>再照着装。</h2>
+        <p class="install-lead">两张卡片都是浏览器扩展，才能收下当前网页。想省心自动更新，选 Edge 商店；想先用完整新功能，下载官网 1.3.0。</p>
+      </div>
+      <div class="install-choices" aria-label="选择安装方式">
+        <article class="install-choice recommended">
+          <span>推荐给大多数人 · 自动更新</span>
+          <h3>Edge 商店版 1.0.1</h3>
+          <p>安装最简单，以后由商店自动更新；包含收下、按期回看和本地收藏等基础功能。</p>
+          <a class="primary" href="https://microsoftedge.microsoft.com/addons/detail/mdpemepjnajchhlagfkpggenllebeacd" target="_blank" rel="noopener noreferrer">去 Edge 商店安装</a>
+        </article>
+        <article class="install-choice latest">
+          <span>完整新功能 · 手动安装</span>
+          <h3>官网版 1.3.0</h3>
+          <p>包含搜索归档、免打扰、统计、侧边栏、每日摘要和 Markdown 导出。</p>
+          <a class="secondary" href="yidian-1.3.0.zip" download>下载官网 1.3.0</a>
+        </article>
       </div>
       <div class="install-guide">
-        <p class="install-guide-label">下载官网 1.3.0 后，按这 4 步安装</p>
+        <div class="install-guide-heading"><p class="install-guide-label">只在选择官网版时需要</p><h3>下载 1.3.0 后，按这 4 步安装</h3></div>
         <ol>
           <li><span>1</span><div><b>下载后解压文件</b><p>找到下载的 yidian-1.3.0.zip，右键选择“全部解压”。</p></div></li>
           <li><span>2</span><div><b>打开浏览器的扩展页面</b><p>把 edge://extensions 或 chrome://extensions 粘贴到地址栏，按回车；再打开右上角的“开发者模式”。</p></div></li>
