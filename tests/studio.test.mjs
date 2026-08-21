@@ -19,13 +19,13 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /重要的，<br><em>不只见一次。<\/em>/);
   assert.match(html, /<a class="primary" href="#demo">看看怎么用<\/a>/);
   assert.doesNotMatch(html, /<a[^>]+href="#demo"[^>]*>收下一条<\/a>/);
-  assert.match(html, /yidian-1\.0\.3\.zip/);
+  assert.match(html, /yidian-1\.3\.0\.zip/);
   assert.match(html, /不读取未选择的正文，不上传记录，不要求登录/);
   assert.match(html, /id="features"/);
   assert.match(html, /我的收藏/);
-  assert.match(html, /查看日期与进度 · 打开原网页 · 删除 · 本地备份/);
-  assert.match(html, /点击图标，收下一条/);
-  assert.match(html, /出现数字，完成回看/);
+  assert.match(html, /搜索与归档 · 回看统计 · JSON \/ Markdown 导出/);
+  assert.match(html, /收下整页或选段/);
+  assert.match(html, /第 2、7、30 天再见/);
   assert.match(html, /class="quiet-reminder"/);
   assert.match(html, /<img src="icon\.png" alt=""><i>1<\/i>/);
   assert.match(html, /到期时，图标旁出现数字。/);
@@ -33,20 +33,20 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /class="github-invite"[^>]*>[\s\S]*让一点继续长大[\s\S]*去点亮 Star ↗/);
   assert.match(html, /选择适合你的<br>安装方式。/);
   assert.match(html, /microsoftedge\.microsoft\.com\/addons\/detail\/mdpemepjnajchhlagfkpggenllebeacd/);
-  assert.match(html, /下载官网 1\.0\.3/);
-  assert.match(html, /又遇见同一页，记作途中偶遇/);
+  assert.match(html, /下载官网 1\.3\.0/);
+  assert.match(html, /途中偶遇 2 次/);
   assert.match(html, /相见足迹示意/);
   assert.match(html, /让一点留在浏览器右上角/);
-  assert.match(html, /刚刚点过，会告诉你“已经记下”/);
+  assert.match(html, /免打扰与每日摘要/);
   assert.match(html, /把旧收藏一起带过来/);
   assert.match(html, /如果你继续使用 Edge 商店版，这里不用看/);
-  assert.match(html, /只有现在下载官网 1\.0\.3/);
+  assert.match(html, /只有改用官网 1\.3\.0/);
   assert.match(html, /以前用过一点/);
-  assert.match(html, /现在下载官网 1\.0\.3 时才需要/);
+  assert.match(html, /从商店版改用官网 1\.3\.0 时才需要/);
   assert.match(html, /推荐给大多数人/);
-  assert.match(html, /本页展示的是官网 1\.0\.3 最新版/);
-  assert.match(html, /Edge 商店目前还没有更新到这一版/);
-  assert.match(html, /商店版功能可能与本页不同/);
+  assert.match(html, /官网手动版已更新到 1\.3\.0/);
+  assert.match(html, /Edge 商店目前仍是 1\.0\.1/);
+  assert.match(html, /功能会少一些/);
   assert.match(html, /想先体验新功能/);
   assert.match(html, /去 Edge 商店安装/);
   assert.match(html, /旧收藏回来了，一点还记得你们见过几次/);
@@ -55,9 +55,10 @@ test('ModelScope Static 创空间入口与卡片配置完整', async () => {
   assert.match(html, /class="pin-path"/);
   assert.match(html, /class="privacy-link" href="privacy\.html">查看完整隐私政策 →<\/a>/);
   assert.match(html, /免费 · 无需登录 · 收藏只在这台电脑里/);
+  assert.match(html, /27,000\+/);
   assert.match(html, /href="contact\.html"/);
   assert.doesNotMatch(html, /Codex|艺术与文化管理研究者|任何浏览器/);
-  await Promise.all(['index.html','contact.html','changelog.html','privacy.html','styles.css','app.js','icon.png','yidian-1.0.3.zip'].map((file) => access(new URL(file, studio))));
+  await Promise.all(['index.html','contact.html','changelog.html','privacy.html','styles.css','app.js','icon.png','yidian-1.3.0.zip'].map((file) => access(new URL(file, studio))));
 });
 
 test('创空间互动演示含四阶段成长和真实指针拖动', async () => {

@@ -11,7 +11,7 @@
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
 </head>
 <body>
   <div class="reading-journey" aria-hidden="true">
@@ -40,6 +40,9 @@
           <button class="secondary pwa-install" type="button" data-install-app hidden>安装到电脑</button>
         </div>
         <p class="microcopy">免费 · 无需登录 · 收藏只在这台电脑里</p>
+        <a class="visit-proof" href="https://www.modelscope.cn/studios/endTree26/yidian" target="_blank" rel="noopener noreferrer" aria-label="查看一点的 ModelScope 创空间">
+          <strong>27,000+</strong><span>次创空间访问 · 谢谢每一次见面</span><i aria-hidden="true">↗</i>
+        </a>
       </div>
 
       <div id="demo" class="demo" aria-label="一点互动演示">
@@ -94,8 +97,8 @@
 
     <section id="features" class="features">
       <div class="features-heading">
-        <div><p class="section-tag">1.0.3 已经能做什么</p><h2>不只收藏，也记得你们怎样重逢。</h2></div>
-        <p><strong>本页展示的是官网 1.0.3 最新版。</strong>Edge 商店目前还没有更新到这一版，商店版功能可能与本页不同。</p>
+        <div><p class="section-tag">1.3.0 已经能做什么</p><h2>回看更安静，<br>收藏也更好带走。</h2></div>
+        <p><strong>官网手动版已更新到 1.3.0。</strong>Edge 商店目前仍是 1.0.1，安装最简单、可以自动更新，但功能会少一些。</p>
       </div>
       <div class="features-layout">
         <div class="library-preview" aria-label="我的收藏页面示意">
@@ -110,14 +113,14 @@
             <div><small>下次回看：7 月 30 日 · 进度 3/4</small><strong>现代艺术史 · 第三讲</strong><p>选中的段落会和来源一起保留。</p></div>
             <span class="record-progress"><i class="three-quarters"></i></span>
           </article>
-          <p class="library-tools">查看日期与进度 · 打开原网页 · 删除 · 本地备份</p>
+          <p class="library-tools">搜索与归档 · 回看统计 · JSON / Markdown 导出</p>
         </div>
         <div class="feature-list">
-          <article><span>01</span><div><b>点击图标，收下一条</b><p>在普通网页点击“一点”，保存整页，或先选中文字再收下。</p></div></article>
-          <article><span>02</span><div><b>出现数字，完成回看</b><p>第 2、7、30 天，到期数量会显示在图标旁；点开查看一条到期内容，再确认完成这次回看。</p></div></article>
-          <article><span>03</span><div><b>共 4 步，宠物长成</b><p>收下 1 次、回看 3 次；进度从 1/4 走到 4/4，宠物也从 25% 长到 100%。</p></div></article>
-          <article><span>04</span><div><b>又遇见同一页，记作途中偶遇</b><p>刚刚点过，会告诉你“已经记下”。隔一段时间再次收下同一页，一点会留下这次途中偶遇；原来的回看计划继续。</p></div></article>
-          <article><span>05</span><div><b>查看与备份收藏</b><p>查看回看时间、进度和相见足迹；也能导出备份文件，需要时再导回来。</p></div></article>
+          <article><span>01</span><div><b>收下整页或选段</b><p>保存来源和你主动选中的文字；侧边栏也会先把当初的选段带回来。</p></div></article>
+          <article><span>02</span><div><b>第 2、7、30 天再见</b><p>到期数量显示在图标旁；一次只带回一条，不把收藏变成新的积压。</p></div></article>
+          <article><span>03</span><div><b>搜索、归档与统计</b><p>按标题、域名或选段搜索；完成的内容可以归档，只统计已经发生的相见。</p></div></article>
+          <article><span>04</span><div><b>免打扰与每日摘要</b><p>默认 22:00–08:00 保持安静；多条到期时每天最多发一条摘要通知。</p></div></article>
+          <article><span>05</span><div><b>导出 JSON 或 Markdown</b><p>备份可以再导回来；Markdown 带来源、选段与足迹，可直接放进 Obsidian。</p></div></article>
           <article><span>06</span><div><b>无需登录</b><p>不读取未选择的正文，不把收藏记录上传到网络。</p></div></article>
         </div>
       </div>
@@ -146,7 +149,7 @@
       <div class="install-copy">
         <p class="section-tag">两种安装方式</p>
         <h2>选择适合你的<br>安装方式。</h2>
-        <p class="install-lead">本页展示的是官网 1.0.3 最新版。Edge 商店目前还没有更新到这一版。</p>
+        <p class="install-lead">想省心自动更新，选 Edge 商店；想先用完整的新功能，下载官网 1.3.0。</p>
         <aside class="pwa-choice" aria-labelledby="pwa-choice-title">
           <div>
             <span>官网应用 · 自动更新</span>
@@ -159,38 +162,38 @@
         <div class="install-choices" aria-label="选择安装方式">
           <article class="install-choice recommended">
             <span>推荐给大多数人</span>
-            <h3>从 Edge 商店安装</h3>
-            <p>安装最简单，以后会自动更新；但现在还不是本页展示的 1.0.3。</p>
+            <h3>从 Edge 商店安装 1.0.1</h3>
+            <p>安装最简单，以后会自动更新；包含收下、按期回看和本地收藏等基础功能。</p>
             <a class="primary" href="https://microsoftedge.microsoft.com/addons/detail/mdpemepjnajchhlagfkpggenllebeacd" target="_blank" rel="noopener noreferrer">去 Edge 商店安装</a>
           </article>
           <article class="install-choice latest">
             <span>想先体验新功能</span>
-            <h3>下载官网 1.0.3</h3>
-            <p>与本页展示一致。下载后，需要按右边 4 步自己安装。</p>
-            <a class="secondary" href="yidian-1.0.3.zip" download>下载官网 1.0.3</a>
+            <h3>下载官网 1.3.0</h3>
+            <p>包含搜索归档、免打扰、统计、侧边栏、每日摘要和 Markdown 导出。</p>
+            <a class="secondary" href="yidian-1.3.0.zip" download>下载官网 1.3.0</a>
           </article>
         </div>
-        <a class="github-invite" href="https://github.com/2487238628/yidian" target="_blank" rel="noopener noreferrer">
+        <a class="github-invite" href="https://github.com/endtree-FDE/yidian" target="_blank" rel="noopener noreferrer">
           <span aria-hidden="true">★</span><span><strong>让一点继续长大</strong><small>觉得有用，欢迎在 GitHub 留下一颗 Star。</small></span><b>去点亮 Star ↗</b>
         </a>
       </div>
       <div class="install-guide">
-        <p class="install-guide-label">下载官网 1.0.3 后，按这 4 步安装</p>
+        <p class="install-guide-label">下载官网 1.3.0 后，按这 4 步安装</p>
         <ol>
-          <li><span>1</span><div><b>下载后解压文件</b><p>找到下载的 yidian-1.0.3.zip，右键选择“全部解压”。</p></div></li>
+          <li><span>1</span><div><b>下载后解压文件</b><p>找到下载的 yidian-1.3.0.zip，右键选择“全部解压”。</p></div></li>
           <li><span>2</span><div><b>打开浏览器的扩展页面</b><p>把 edge://extensions 或 chrome://extensions 粘贴到地址栏，按回车；再打开右上角的“开发者模式”。</p></div></li>
           <li><span>3</span><div><b>选择解压后的文件夹</b><p>点“加载解压缩的扩展”，选择刚才解压出来的文件夹。</p></div></li>
           <li class="pin-step"><span>4</span><div><b>让一点留在浏览器右上角</b><p>点浏览器右上角的“扩展”（拼图图标），找到“一点”，再点右侧的图钉。图钉显示为已固定后，一点图标会留在工具栏；以后直接点它收下网页。</p><div class="pin-path" aria-label="固定一点的操作顺序"><span>扩展</span><i>→</i><span>一点</span><i>→</i><strong aria-label="图钉">📌</strong></div></div></li>
         </ol>
       </div>
       <details class="web-migration">
-        <summary><span>以前用过一点？</span><strong>把旧收藏一起带过来</strong><i>现在下载官网 1.0.3 时才需要</i></summary>
+        <summary><span>以前用过一点？</span><strong>把旧收藏一起带过来</strong><i>从商店版改用官网 1.3.0 时才需要</i></summary>
         <div>
-          <p><b>如果你继续使用 Edge 商店版，这里不用看。</b>商店版会自己更新，收藏也留在原处。只有现在下载官网 1.0.3，电脑里才会同时出现商店版和官网版；它们各有一份本地收藏，需要下面 3 步合在一起。</p>
+          <p><b>如果你继续使用 Edge 商店版，这里不用看。</b>商店版会自己更新，收藏也留在原处。只有改用官网 1.3.0 时，电脑里才会同时出现商店版和官网版；它们各有一份本地收藏，需要下面 3 步合在一起。</p>
           <ol>
             <li><span>1</span><strong>先在原版导出</strong><small>打开原来的一点，在“我的收藏”里点“导出备份”。</small></li>
-            <li><span>2</span><strong>再打开官网版</strong><small>在扩展页面关闭原版，打开刚安装的 1.0.3；原版先别删除。</small></li>
-            <li><span>3</span><strong>把收藏导入回来</strong><small>打开 1.0.3 的“我的收藏”，点“导入备份”。</small></li>
+            <li><span>2</span><strong>再打开官网版</strong><small>在扩展页面关闭商店版，打开刚安装的 1.3.0；商店版先别删除。</small></li>
+            <li><span>3</span><strong>把收藏导入回来</strong><small>打开 1.3.0 的“我的收藏”，点“导入备份”。</small></li>
           </ol>
           <p class="migration-result"><strong>旧收藏回来了，一点还记得你们见过几次。</strong><small>同一网页只保留一条，原来的回看进度和相见足迹都在。</small></p>
         </div>
