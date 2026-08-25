@@ -1,12 +1,14 @@
 import {
-  addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, inQuietHours, isDue, MAX_ENCOUNTERS, MAX_EXCERPT_LENGTH, MAX_STAGE,
-  nextReviewAtFor, normalizeQuietHours, normalizeUrl, restartRecord, selectNextDue, sourceDomain, updateRecordUrl
+  addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, dayKeyFor, inQuietHours, isDue, MAX_STAGE,
+  mergeByKey, normalizeImportedRecord, normalizeQuietHours, normalizeUrl, quietEndAt, restartRecord, selectNextDue, updateRecordUrl
 } from './domain.mjs';
 
 const RECORDS_KEY = 'records';
 const ARCHIVED_KEY = 'archivedRecords';
 const SETTINGS_KEY = 'settings';
+const DIGEST_DAY_KEY = 'lastDigestDay';
 const REVIEW_ALARM = 'yidian-next-review';
+const QUIET_END_ALARM = 'yidian-quiet-end';
 const LEGACY_REVIEW_ALARM = '12730-next-review';
 const DUE_NOTIFICATION_ID = 'yidian-due';
 const DUE_BADGE_COLOR = '#28735F';
@@ -102,23 +104,31 @@ async function syncDerivedState(records) {
 }
 
 // 到期提醒：默认关闭，用户在“我的收藏”里手动开启。用固定 id 重复创建即更新，避免刷屏。
-// 免打扰时段内静默跳过：记录保持到期状态，下次 alarm 或打开扩展时补显示。
-// digest 口径：多条到期时每天只发一条计数通知，点击进收藏库；单条才直达原网页。
+// 免打扰时段内静默跳过：记录保持到期状态，并在静默结束时刻排一个补发闹钟；
+// 浏览器重新启动时 onStartup 也会补判定。
+// digest 口径：多条到期时每天只发一条计数通知（按北京墙钟分日、落盘去重，
+// SW 重启不丢），点击进收藏库；单条才直达原网页。
 let lastNotifiedRecord = null;
 let lastNotifiedMany = false;
-let lastDigestDay = '';
 
 export async function maybeNotifyDue(records = null, now = Date.now()) {
   const settings = await getSettings();
   if (!settings.notifyOnDue) return;
-  if (inQuietHours(settings.quietHours, now)) return;
+  if (inQuietHours(settings.quietHours, now)) {
+    const quietEnd = quietEndAt(settings.quietHours, now);
+    if (quietEnd != null) await chrome.alarms.create(QUIET_END_ALARM, { when: quietEnd });
+    return;
+  }
   const currentRecords = records ?? await getRecords();
   const dueRecords = currentRecords.filter((record) => isDue(record, now));
   if (!dueRecords.length) return;
   const many = dueRecords.length > 1;
-  const day = new Date(now).toISOString().slice(0, 10);
-  if (many && lastDigestDay === day) return;
-  if (many) lastDigestDay = day;
+  const day = dayKeyFor(now);
+  if (many) {
+    const storedDay = (await chrome.storage.local.get(DIGEST_DAY_KEY))[DIGEST_DAY_KEY];
+    if (storedDay === day) return;
+    await chrome.storage.local.set({ [DIGEST_DAY_KEY]: day });
+  }
   const record = selectNextDue(currentRecords);
   lastNotifiedRecord = many ? null : record;
   lastNotifiedMany = many;
@@ -313,57 +323,6 @@ async function restoreArchived(normalizedUrl) {
   });
 }
 
-function normalizeImportedRecord(record, now = Date.now()) {
-  if (!record || typeof record !== 'object') throw new TypeError('备份中包含无效记录');
-  const stage = Number(record.stage);
-  if (!Number.isInteger(stage) || stage < 1 || stage > MAX_STAGE) throw new TypeError('备份中的进度无效');
-  const url = String(record.url || '');
-  const title = String(record.title || '').trim();
-  const excerpt = String(record.excerpt || '').trim();
-  const skinId = String(record.skinId || 'fluid-01');
-  const canonicalUrl = String(record.canonicalUrl || '');
-  const encounters = Array.isArray(record.encounters) ? record.encounters : [];
-  if (canonicalUrl.length > 4096 || encounters.length > MAX_ENCOUNTERS) throw new TypeError('Backup encounter history is too large');
-  for (const event of encounters) {
-    if (!event || !['saved', 'review', 'encounter', 'restart'].includes(event.type)
-      || !Number.isFinite(event.at) || String(event.excerpt || '').length > MAX_EXCERPT_LENGTH) {
-      throw new TypeError('Backup contains an invalid encounter');
-    }
-  }
-  if (url.length > 4096 || title.length > 500 || excerpt.length > MAX_EXCERPT_LENGTH || skinId.length > 64) {
-    throw new TypeError('备份中的文本字段过长');
-  }
-  const normalizedUrl = normalizeUrl(canonicalUrl || url);
-  const completedAt = Number.isFinite(record.completedAt) ? record.completedAt : now;
-  const createdAt = Number.isFinite(record.createdAt) ? record.createdAt : completedAt;
-  return {
-    title: title || sourceDomain(url),
-    excerpt,
-    url,
-    canonicalUrl: canonicalUrl ? normalizeUrl(canonicalUrl) : '',
-    normalizedUrl,
-    sourceDomain: sourceDomain(url),
-    stage,
-    completedAt,
-    nextReviewAt: stage === MAX_STAGE
-      ? null
-      : (Number.isFinite(record.nextReviewAt) ? record.nextReviewAt : nextReviewAtFor(stage, completedAt)),
-    createdAt,
-    updatedAt: Number.isFinite(record.updatedAt) ? record.updatedAt : completedAt,
-    skinId,
-    encounters,
-  };
-}
-
-function mergeByKey(current, incoming) {
-  const merged = new Map(current.map((record) => [record.normalizedUrl, record]));
-  for (const record of incoming) {
-    const existing = merged.get(record.normalizedUrl);
-    if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
-  }
-  return [...merged.values()];
-}
-
 async function importRecords(rawRecords, rawArchived) {
   if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的一点备份文件');
   const archivedList = rawArchived == null ? [] : rawArchived;
@@ -390,7 +349,10 @@ async function setReducedMotion(value) {
 async function setNotifyOnDue(value) {
   const settings = { ...(await getSettings()), notifyOnDue: Boolean(value) };
   await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
-  if (!settings.notifyOnDue) await chrome.notifications.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
+  if (!settings.notifyOnDue) {
+    await chrome.notifications.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
+    await chrome.alarms.clear(QUIET_END_ALARM).catch(() => undefined);
+  }
   return { ok: true, settings };
 }
 
@@ -492,7 +454,7 @@ if (globalThis.chrome?.runtime?.onMessage) {
     await maybeNotifyDue(migration.records).catch(() => undefined);
   });
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === REVIEW_ALARM) {
+    if (alarm.name === REVIEW_ALARM || alarm.name === QUIET_END_ALARM) {
       syncDerivedState()
         .then(() => maybeNotifyDue())
         .catch(console.error);

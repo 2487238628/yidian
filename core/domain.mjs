@@ -224,14 +224,94 @@ export function consolidateRecords(records) {
   return { records: merged, changed, mergedCount };
 }
 
+// 按 normalizedUrl 合并两个记录集，同一键取 updatedAt 更新的一条。
+// 用于备份导入与归档恢复，纯函数，不依赖 chrome.*。
+export function mergeByKey(current, incoming) {
+  const merged = new Map(current.map((record) => [record.normalizedUrl, record]));
+  for (const record of incoming) {
+    const existing = merged.get(record.normalizedUrl);
+    if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
+  }
+  return [...merged.values()];
+}
+
+// 校验并规范一条备份记录；无效字段直接抛错，由调用方决定如何提示。
+export function normalizeImportedRecord(record, now = Date.now()) {
+  if (!record || typeof record !== 'object') throw new TypeError('备份中包含无效记录');
+  const stage = Number(record.stage);
+  if (!Number.isInteger(stage) || stage < 1 || stage > MAX_STAGE) throw new TypeError('备份中的进度无效');
+  const url = String(record.url || '');
+  const title = String(record.title || '').trim();
+  const excerpt = String(record.excerpt || '').trim();
+  const skinId = String(record.skinId || 'fluid-01');
+  const canonicalUrl = String(record.canonicalUrl || '');
+  const encounters = Array.isArray(record.encounters) ? record.encounters : [];
+  if (canonicalUrl.length > 4096 || encounters.length > MAX_ENCOUNTERS) throw new TypeError('Backup encounter history is too large');
+  for (const event of encounters) {
+    if (!event || !['saved', 'review', 'encounter', 'restart'].includes(event.type)
+      || !Number.isFinite(event.at) || String(event.excerpt || '').length > MAX_EXCERPT_LENGTH) {
+      throw new TypeError('Backup contains an invalid encounter');
+    }
+  }
+  if (url.length > 4096 || title.length > 500 || excerpt.length > MAX_EXCERPT_LENGTH || skinId.length > 64) {
+    throw new TypeError('备份中的文本字段过长');
+  }
+  const normalizedUrl = normalizeUrl(canonicalUrl || url);
+  const completedAt = Number.isFinite(record.completedAt) ? record.completedAt : now;
+  const createdAt = Number.isFinite(record.createdAt) ? record.createdAt : completedAt;
+  return {
+    title: title || sourceDomain(url),
+    excerpt,
+    url,
+    canonicalUrl: canonicalUrl ? normalizeUrl(canonicalUrl) : '',
+    normalizedUrl,
+    sourceDomain: sourceDomain(url),
+    stage,
+    completedAt,
+    nextReviewAt: stage === MAX_STAGE
+      ? null
+      : (Number.isFinite(record.nextReviewAt) ? record.nextReviewAt : nextReviewAtFor(stage, completedAt)),
+    createdAt,
+    updatedAt: Number.isFinite(record.updatedAt) ? record.updatedAt : completedAt,
+    skinId,
+    encounters,
+  };
+}
+
 // 免打扰时段：默认开启。跨午夜时段（如 22:00-08:00）按墙钟时间判定，
 // 只影响通知是否发出，不改变记录的到期状态。
 const TIME_OF_DAY = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
+// 墙钟日期键（YYYY-MM-DD），与免打扰同一时区口径；
+// 摘要通知"每天一条"的去重按此分日，不按 UTC。
+export function dayKeyFor(now = Date.now(), timeZone = 'Asia/Shanghai') {
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone,
+  }).format(new Date(now));
+}
 
 function minutesOfDay(value) {
   const match = TIME_OF_DAY.exec(String(value ?? '').trim());
   if (!match) return null;
   return Number(match[1]) * 60 + Number(match[2]);
+}
+
+// 下一个免打扰结束时刻（毫秒时间戳）。Asia/Shanghai 无夏令时，
+// 墙钟分钟与 UTC 毫秒等步长推进，可直接用分钟差换算。
+// 不在免打扰内时返回 null；到期落在静默期时用它排补发闹钟。
+export function quietEndAt(quietHours, now = Date.now(), timeZone = 'Asia/Shanghai') {
+  const hours = normalizeQuietHours(quietHours);
+  if (!hours.enabled || !inQuietHours(hours, now, timeZone)) return null;
+  const end = minutesOfDay(hours.end);
+  if (end == null) return null;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit', minute: '2-digit', hour12: false, timeZone,
+  }).formatToParts(new Date(now));
+  const minuteNow = Number(parts.find((part) => part.type === 'hour').value % 24) * 60
+    + Number(parts.find((part) => part.type === 'minute').value);
+  let delta = (end - minuteNow + 1440) % 1440;
+  if (delta === 0) delta = 1440; // 恰好在终点不属于静默（终点不含），兜底到明天
+  return now + delta * 60_000;
 }
 
 export function normalizeQuietHours(input) {
