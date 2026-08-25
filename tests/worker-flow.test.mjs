@@ -80,7 +80,7 @@ test('alarm 只安排未来记录，到期记录只触发 badge', async () => {
   const due = { stage: 1, nextReviewAt: now - 1, createdAt: 1 };
   const future = { stage: 1, nextReviewAt: now + 8_000, createdAt: 2 };
   await scheduleNext([due, future], now);
-  assert.deepEqual(state.calls.alarmCreates, [{ name: '12730-next-review', options: { when: now + 8_000 } }]);
+  assert.deepEqual(state.calls.alarmCreates, [{ name: 'yidian-next-review', options: { when: now + 8_000 } }]);
   assert.deepEqual(state.calls.alarmClears, []);
   await refreshBadge([due, future], now);
   assert.ok(state.calls.badges.some(([kind, value]) => kind === 'text' && value.text === '1'));
@@ -102,7 +102,7 @@ test('没有未来记录时才清除 alarm，不把到期记录改排到一秒�
   const { scheduleNext } = await loadWorker('alarm-clear');
   await scheduleNext([{ stage: 1, nextReviewAt: 5, createdAt: 1 }], 10);
   assert.deepEqual(state.calls.alarmCreates, []);
-  assert.deepEqual(state.calls.alarmClears, ['12730-next-review']);
+  assert.deepEqual(state.calls.alarmClears, ['yidian-next-review']);
 });
 
 test('并发 Mark A、B 完整串行读改写并保留两条记录', async () => {
@@ -125,6 +125,92 @@ test('Mark 会把用户主动选择的文本写入本地记录', async () => {
   assert.equal(state.local.records[0].excerpt, '关键段落');
 });
 
+test('刚刚重复 Mark 只确认已保存，不新增偶遇', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('immediate-repeat-mark');
+  await handleMessage({ type: 'mark-current', tab: tabA });
+  const before = structuredClone(state.local.records[0]);
+  const result = await handleMessage({ type: 'mark-current', tab: tabA });
+  assert.equal(result.created, false);
+  assert.equal(result.encountered, false);
+  assert.equal(result.alreadySaved, true);
+  assert.deepEqual(state.local.records[0], before);
+});
+
+test('隔一段时间重复 Mark 记为途中偶遇，不新增记录或重置计划', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('repeat-mark');
+  await handleMessage({ type: 'mark-current', tab: tabA });
+  state.local.records[0].encounters[0].at = Date.now() - 11 * 60_000;
+  state.local.records[0].updatedAt = state.local.records[0].encounters[0].at;
+  state.local.records[0].stage = 2;
+  state.local.records[0].nextReviewAt = 123_456;
+  const result = await handleMessage({
+    type: 'mark-current',
+    tab: { ...tabA, url: 'https://a.example/doc?utm_source=again#part', excerpt: '再次遇见' },
+  });
+  assert.equal(result.created, false);
+  assert.equal(result.encountered, true);
+  assert.equal(state.local.records.length, 1);
+  assert.equal(state.local.records[0].stage, 2);
+  assert.equal(state.local.records[0].nextReviewAt, 123_456);
+  assert.equal(state.local.records[0].excerpt, '再次遇见');
+  assert.equal(state.local.records[0].encounters.filter((event) => event.type === 'encounter').length, 1);
+});
+
+test('页面提供 canonical 链接时按正文身份识别同一页', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('canonical-mark');
+  const canonicalUrl = 'https://news.example/story';
+  await handleMessage({
+    type: 'mark-current',
+    tab: { ...tabA, url: 'https://m.news.example/story?from=feed' },
+  });
+  const result = await handleMessage({
+    type: 'mark-current',
+    tab: { ...tabA, url: 'https://m.news.example/story?from=feed#comments', canonicalUrl },
+  });
+  assert.equal(result.created, false);
+  assert.equal(state.local.records.length, 1);
+  assert.equal(state.local.records[0].normalizedUrl, canonicalUrl);
+
+});
+
+test('再次偶遇会同时收拢 canonical 与旧网址重复项', async () => {
+  const state = chromeMock();
+  const { handleMessage } = await loadWorker('canonical-alias-merge');
+  const url = 'https://m.news.example/story';
+  const canonicalUrl = 'https://news.example/story';
+  await handleMessage({ type:'mark-current', tab:{ ...tabA, url, canonicalUrl } });
+  const legacy = {
+    ...structuredClone(state.local.records[0]),
+    title:'旧网址记录', url, canonicalUrl:'', normalizedUrl:url, stage:2,
+  };
+  state.local.records.push(legacy);
+  const result = await handleMessage({ type:'mark-current', tab:{ ...tabA, url, canonicalUrl } });
+  assert.equal(result.created, false);
+  assert.equal(state.local.records.length, 1);
+  assert.equal(state.local.records[0].normalizedUrl, canonicalUrl);
+  assert.equal(state.local.records[0].stage, 2);
+});
+
+test('启动升级会合并旧重复项，并清理刚刚产生的假偶遇', async () => {
+  const state = chromeMock();
+  await loadWorker('startup-migration');
+  const now = Date.now();
+  state.local.records = [
+    { title:'旧记录', url:'https://a.example/doc#first', normalizedUrl:'https://a.example/doc', sourceDomain:'a.example', stage:2, completedAt:now-5, nextReviewAt:now+10, createdAt:now-20, updatedAt:now-5, skinId:'fluid-01' },
+    { title:'后来又存', url:'https://a.example/doc/?utm_source=again', normalizedUrl:'https://a.example/doc/?utm_source=again', sourceDomain:'a.example', stage:1, completedAt:now-2, nextReviewAt:now+20, createdAt:now-2, updatedAt:now-2, skinId:'fluid-01' },
+  ];
+  await state.listeners.startup();
+  assert.equal(state.local.records.length, 1);
+  assert.equal(state.local.records[0].stage, 2);
+  assert.equal(state.local.records[0].nextReviewAt, now + 10);
+  assert.equal(
+    state.local.records[0].encounters.filter((event) => event.type === 'encounter').length,
+    0,
+  );
+});
 test('并发完成同一回访只能推进一级', async () => {
   const state = chromeMock();
   const { handleMessage } = await loadWorker('reviews');
@@ -200,9 +286,11 @@ test('错误 badge 在刷新或换页时清除并恢复全局到期颜色', asyn
   state.listeners.tabUpdated(77, { status: 'loading' });
   await new Promise((resolve) => setTimeout(resolve, 15));
   const tabTextCalls = state.calls.badges.filter(([kind, value]) => kind === 'text' && value.tabId === 77);
-  assert.equal(tabTextCalls.at(-1)[1].text, null);
+  assert.equal(tabTextCalls.at(-1)[1].text, '');
   const tabColorCalls = state.calls.badges.filter(([kind, value]) => kind === 'color' && value.tabId === 77);
   assert.equal(tabColorCalls.at(-1)[1].color, '#28735F');
+  const tabTitleCalls = state.calls.badges.filter(([kind, value]) => kind === 'title' && value.tabId === 77);
+  assert.equal(tabTitleCalls.at(-1)[1].title, '打开一点｜收下或回看当前内容');
 });
 test('普通网页注入失败也显示当前标签专属可见反馈', async () => {
   const state = chromeMock({ missingReceiverOnce: true, injectionError: new Error('Cannot access contents of the page') });

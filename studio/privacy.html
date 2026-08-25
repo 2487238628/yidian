@@ -6,9 +6,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="一点浏览器扩展的隐私政策：收藏记录仅保存在浏览器本地，不上传，不要求登录。">
   <meta name="theme-color" content="#f7f3e8">
+  <meta name="application-name" content="一点">
   <title>隐私政策 · 一点</title>
   <link rel="icon" href="icon.png">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css?v=17">
 </head>
 <body>
   <nav class="nav" aria-label="主导航">
@@ -26,7 +29,7 @@
 
     <section class="policy-section">
       <h2>一点保存什么</h2>
-      <p>当你主动点击扩展图标或使用快捷键时，一点会在浏览器本地保存当前网页的标题、网址、来源域名、收藏与回看时间、相见进度，以及你主动选中的文字。未选中的网页正文不会被保存。</p>
+      <p>当你主动点击一点图标或使用快捷键时，一点会在浏览器本地保存当前网页的标题、网址、来源域名、收藏与回看时间、回看进度，以及你主动选中的文字。未选中的网页正文不会被保存。</p>
     </section>
     <section class="policy-section">
       <h2>这些数据去哪里</h2>
@@ -37,13 +40,13 @@
       <ul>
         <li><strong>读取当前标签页：</strong>只在你主动唤出一点时，读取当前网页的标题、网址和选中文字。</li>
         <li><strong>在当前网页运行：</strong>把一点宠物和收藏卡片显示在你正在使用的普通网页上。</li>
-        <li><strong>闹钟：</strong>在第 2、7、30 天检查是否有内容到期。</li>
+        <li><strong>定时检查：</strong>在第 2、7、30 天检查是否有内容到期。</li>
         <li><strong>本地存储：</strong>保存收藏、回看进度和显示设置。</li>
       </ul>
     </section>
     <section class="policy-section">
       <h2>你可以怎样管理</h2>
-      <p>你可以在“我的收藏”中打开或删除单条记录，也可以导出 JSON 备份、从备份合并恢复。卸载扩展后，本地数据的清理由浏览器处理。</p>
+      <p>你可以在“我的收藏”中打开或删除单条记录，也可以导出备份文件，也可以从备份恢复。卸载扩展后，本地数据的清理由浏览器处理。</p>
     </section>
     <section class="policy-section policy-contact">
       <h2>问题与联系</h2>
@@ -56,5 +59,6 @@
     <p><strong>一点</strong> · 重要的，不只见一次。</p>
     <p><a href="index.html">返回首页</a> · <a href="changelog.html">更新记录</a> · <a href="contact.html">反馈与联系</a></p>
   </footer>
+  <script src="pwa.js"></script>
 </body>
 </html>

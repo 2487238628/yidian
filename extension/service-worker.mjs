@@ -1,12 +1,18 @@
 import {
-  advanceRecord, createRecord, isDue, MAX_EXCERPT_LENGTH, MAX_STAGE, nextReviewAtFor, normalizeUrl, selectNextDue,
-  sourceDomain, upsertByNormalizedUrl, updateRecordUrl
+  addEncounter, advanceRecord, canAddEncounter, consolidateRecords, createRecord, dayKeyFor, inQuietHours, isDue, MAX_STAGE,
+  mergeByKey, normalizeImportedRecord, normalizeQuietHours, normalizeUrl, quietEndAt, restartRecord, selectNextDue, updateRecordUrl
 } from './domain.mjs';
 
 const RECORDS_KEY = 'records';
+const ARCHIVED_KEY = 'archivedRecords';
 const SETTINGS_KEY = 'settings';
-const REVIEW_ALARM = '12730-next-review';
+const DIGEST_DAY_KEY = 'lastDigestDay';
+const REVIEW_ALARM = 'yidian-next-review';
+const QUIET_END_ALARM = 'yidian-quiet-end';
+const LEGACY_REVIEW_ALARM = '12730-next-review';
+const DUE_NOTIFICATION_ID = 'yidian-due';
 const DUE_BADGE_COLOR = '#28735F';
+const DEFAULT_ACTION_TITLE = '打开一点｜收下或回看当前内容';
 const UNAVAILABLE_BADGE_COLOR = '#8A5200';
 
 export function createSerialQueue() {
@@ -21,16 +27,35 @@ export function createSerialQueue() {
 const enqueueBadgeRefresh = createSerialQueue();
 const enqueueRecordsMutation = createSerialQueue();
 
-async function getRecords() {
+async function getRawRecords() {
   return (await chrome.storage.local.get(RECORDS_KEY))[RECORDS_KEY] ?? [];
+}
+
+async function getRecords() {
+  return consolidateRecords(await getRawRecords()).records;
 }
 
 async function saveRecords(records) {
   await chrome.storage.local.set({ [RECORDS_KEY]: records });
 }
 
+async function getArchivedRecords() {
+  const archived = (await chrome.storage.local.get(ARCHIVED_KEY))[ARCHIVED_KEY];
+  return Array.isArray(archived) ? archived : [];
+}
+
+async function saveArchivedRecords(archived) {
+  await chrome.storage.local.set({ [ARCHIVED_KEY]: archived });
+}
+
 async function getSettings() {
-  return (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY] ?? { reducedMotion: false };
+  const raw = (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY];
+  const candidate = raw && typeof raw === 'object' ? raw : {};
+  return {
+    reducedMotion: Boolean(candidate.reducedMotion),
+    notifyOnDue: Boolean(candidate.notifyOnDue),
+    quietHours: normalizeQuietHours(candidate.quietHours),
+  };
 }
 
 function isWebUrl(rawUrl) {
@@ -70,12 +95,61 @@ export async function refreshBadge(records = null, now = Date.now()) {
 }
 
 function requestBadgeRefresh(records = null) {
-  return enqueueBadgeRefresh(() => refreshBadge(records)).catch((error) => console.warn('12730 badge refresh failed', error));
+  return enqueueBadgeRefresh(() => refreshBadge(records)).catch((error) => console.warn('yidian badge refresh failed', error));
 }
 
 async function syncDerivedState(records) {
-  await scheduleNext(records).catch((error) => console.warn('12730 alarm scheduling failed', error));
+  await scheduleNext(records).catch((error) => console.warn('yidian alarm scheduling failed', error));
   await requestBadgeRefresh(records);
+}
+
+// 到期提醒：默认关闭，用户在“我的收藏”里手动开启。用固定 id 重复创建即更新，避免刷屏。
+// 免打扰时段内静默跳过：记录保持到期状态，并在静默结束时刻排一个补发闹钟；
+// 浏览器重新启动时 onStartup 也会补判定。
+// digest 口径：多条到期时每天只发一条计数通知（按北京墙钟分日、落盘去重，
+// SW 重启不丢），点击进收藏库；单条才直达原网页。
+let lastNotifiedRecord = null;
+let lastNotifiedMany = false;
+
+export async function maybeNotifyDue(records = null, now = Date.now()) {
+  const settings = await getSettings();
+  if (!settings.notifyOnDue) return;
+  if (inQuietHours(settings.quietHours, now)) {
+    const quietEnd = quietEndAt(settings.quietHours, now);
+    if (quietEnd != null) await chrome.alarms.create(QUIET_END_ALARM, { when: quietEnd });
+    return;
+  }
+  const currentRecords = records ?? await getRecords();
+  const dueRecords = currentRecords.filter((record) => isDue(record, now));
+  if (!dueRecords.length) return;
+  const many = dueRecords.length > 1;
+  const day = dayKeyFor(now);
+  if (many) {
+    const storedDay = (await chrome.storage.local.get(DIGEST_DAY_KEY))[DIGEST_DAY_KEY];
+    if (storedDay === day) return;
+    await chrome.storage.local.set({ [DIGEST_DAY_KEY]: day });
+  }
+  const record = selectNextDue(currentRecords);
+  lastNotifiedRecord = many ? null : record;
+  lastNotifiedMany = many;
+  await chrome.notifications.create(DUE_NOTIFICATION_ID, {
+    type: 'basic',
+    iconUrl: 'icons/icon-128.png',
+    title: many ? '一点' : record.title,
+    message: many
+      ? `今天有 ${dueRecords.length} 位老朋友想见你。`
+      : '一点想再见它一面。',
+  }).catch((error) => console.warn('yidian notification failed', error));
+}
+
+function openNotifiedRecord() {
+  const record = lastNotifiedRecord;
+  const many = lastNotifiedMany;
+  lastNotifiedRecord = null;
+  lastNotifiedMany = false;
+  chrome.notifications?.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
+  const url = !many && record && isWebUrl(record.url) ? record.url : chrome.runtime.getURL('library.html');
+  return chrome.tabs.create({ url }).catch(() => undefined);
 }
 
 function isMissingMessageReceiver(error) {
@@ -87,10 +161,10 @@ function isMissingMessageReceiver(error) {
 async function injectCurrentPet(tabId) {
   await chrome.scripting.executeScript({
     target: { tabId },
-    func: () => document.getElementById('otter-12730-root')?.remove(),
+    func: () => document.getElementById('otter-yidian-root')?.remove(),
   });
   await chrome.scripting.insertCSS({ target: { tabId }, files: ['pet.css'] });
-  await chrome.scripting.executeScript({ target: { tabId }, files: ['pet.js'] });
+  await chrome.scripting.executeScript({ target: { tabId }, files: ['shared.js', 'pet.js'] });
 }
 
 async function setTabInjectionError(tabId) {
@@ -106,8 +180,8 @@ async function clearTabInjectionError(tabId) {
   if (!tabId) return;
   await Promise.allSettled([
     chrome.action.setBadgeBackgroundColor({ tabId, color: DUE_BADGE_COLOR }),
-    chrome.action.setBadgeText({ tabId, text: null }),
-    chrome.action.setTitle({ tabId, title: null }),
+    chrome.action.setBadgeText({ tabId, text: '' }),
+    chrome.action.setTitle({ tabId, title: DEFAULT_ACTION_TITLE }),
   ]);
 }
 
@@ -140,12 +214,32 @@ async function refreshInjectedPets() {
 async function markCurrent(tab) {
   return enqueueRecordsMutation(async () => {
     const records = await getRecords();
-    const incoming = createRecord({ title: tab.title, url: tab.url, excerpt: tab.excerpt });
-    const result = upsertByNormalizedUrl(records, incoming);
-    if (result.created) await saveRecords(result.records);
-    await syncDerivedState(result.records);
+    const incoming = createRecord({ title: tab.title, url: tab.url, canonicalUrl: tab.canonicalUrl, excerpt: tab.excerpt });
+    const pageNormalized = normalizeUrl(tab.url);
+    const aliases = new Set([incoming.normalizedUrl, pageNormalized]);
+    const created = !records.some((item) => aliases.has(item.normalizedUrl));
+    let record = incoming;
+    let next = [...records, incoming];
+    let encountered = false;
+    if (!created) {
+      const promoted = records.map((item) => aliases.has(item.normalizedUrl) ? {
+        ...item,
+        canonicalUrl: incoming.canonicalUrl || item.canonicalUrl || '',
+        normalizedUrl: incoming.normalizedUrl,
+      } : item);
+      next = consolidateRecords(promoted).records;
+      const index = next.findIndex((item) => item.normalizedUrl === incoming.normalizedUrl);
+      record = next[index];
+      if (canAddEncounter(record)) {
+        record = addEncounter(record, { excerpt: tab.excerpt });
+        next = next.with(index, record);
+        encountered = true;
+      }
+    }
+    await saveRecords(next);
+    await syncDerivedState(next);
     await refreshInjectedPets().catch(() => undefined);
-    return { ok: true, created: result.created, record: result.record };
+    return { ok: true, created, encountered, alreadySaved: !created && !encountered, record };
   });
 }
 
@@ -192,52 +286,57 @@ async function changeUrl(normalizedUrl, url) {
   });
 }
 
-function normalizeImportedRecord(record, now = Date.now()) {
-  if (!record || typeof record !== 'object') throw new TypeError('备份中包含无效记录');
-  const stage = Number(record.stage);
-  if (!Number.isInteger(stage) || stage < 1 || stage > MAX_STAGE) throw new TypeError('备份中的进度无效');
-  const url = String(record.url || '');
-  const title = String(record.title || '').trim();
-  const excerpt = String(record.excerpt || '').trim();
-  const skinId = String(record.skinId || 'fluid-01');
-  if (url.length > 4096 || title.length > 500 || excerpt.length > MAX_EXCERPT_LENGTH || skinId.length > 64) {
-    throw new TypeError('备份中的文本字段过长');
-  }
-  const normalizedUrl = normalizeUrl(url);
-  const completedAt = Number.isFinite(record.completedAt) ? record.completedAt : now;
-  const createdAt = Number.isFinite(record.createdAt) ? record.createdAt : completedAt;
-  return {
-    title: title || sourceDomain(url),
-    excerpt,
-    url,
-    normalizedUrl,
-    sourceDomain: sourceDomain(url),
-    stage,
-    completedAt,
-    nextReviewAt: stage === MAX_STAGE
-      ? null
-      : (Number.isFinite(record.nextReviewAt) ? record.nextReviewAt : nextReviewAtFor(stage, completedAt)),
-    createdAt,
-    updatedAt: Number.isFinite(record.updatedAt) ? record.updatedAt : completedAt,
-    skinId,
-  };
-}
-
-async function importRecords(rawRecords) {
-  if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的一点备份文件');
-  const incoming = rawRecords.map((record) => normalizeImportedRecord(record));
+// 归档已完成：把 stage 4 的记录整体移入 archivedRecords，收藏库默认不再显示。
+async function archiveGrown() {
   return enqueueRecordsMutation(async () => {
-    const current = await getRecords();
-    const merged = new Map(current.map((record) => [record.normalizedUrl, record]));
-    for (const record of incoming) {
+    const records = await getRecords();
+    const grown = records.filter((record) => record.stage === MAX_STAGE);
+    if (!grown.length) return { ok: true, archived: 0, remaining: records.length };
+    const remaining = records.filter((record) => record.stage !== MAX_STAGE);
+    const merged = new Map((await getArchivedRecords()).map((record) => [record.normalizedUrl, record]));
+    for (const record of grown) {
       const existing = merged.get(record.normalizedUrl);
       if (!existing || record.updatedAt >= existing.updatedAt) merged.set(record.normalizedUrl, record);
     }
-    const records = [...merged.values()];
+    await saveRecords(remaining);
+    await saveArchivedRecords([...merged.values()]);
+    await syncDerivedState(remaining);
+    return { ok: true, archived: grown.length, remaining: remaining.length };
+  });
+}
+
+async function restoreArchived(normalizedUrl) {
+  return enqueueRecordsMutation(async () => {
+    const archived = await getArchivedRecords();
+    const index = archived.findIndex((record) => record.normalizedUrl === normalizedUrl);
+    if (index < 0) return { ok: false, error: '归档里没有这条记录' };
+    const records = await getRecords();
+    if (records.some((record) => record.normalizedUrl === normalizedUrl)) {
+      return { ok: false, error: '收藏库里已有同一网页的记录' };
+    }
+    const next = consolidateRecords([...records, archived[index]]).records;
+    await saveRecords(next);
+    await saveArchivedRecords(archived.filter((_, i) => i !== index));
+    await syncDerivedState(next);
+    await refreshInjectedPets().catch(() => undefined);
+    return { ok: true, record: archived[index] };
+  });
+}
+
+async function importRecords(rawRecords, rawArchived) {
+  if (!Array.isArray(rawRecords) || rawRecords.length > 5000) throw new TypeError('请选择有效的一点备份文件');
+  const archivedList = rawArchived == null ? [] : rawArchived;
+  if (!Array.isArray(archivedList) || archivedList.length > 5000) throw new TypeError('请选择有效的一点备份文件');
+  const incoming = rawRecords.map((record) => normalizeImportedRecord(record));
+  const incomingArchived = archivedList.map((record) => normalizeImportedRecord(record));
+  return enqueueRecordsMutation(async () => {
+    const records = consolidateRecords(mergeByKey(await getRecords(), incoming)).records;
+    const archived = mergeByKey(await getArchivedRecords(), incomingArchived);
     await saveRecords(records);
+    await saveArchivedRecords(archived);
     await syncDerivedState(records);
     await refreshInjectedPets().catch(() => undefined);
-    return { ok: true, imported: incoming.length, total: records.length };
+    return { ok: true, imported: incoming.length + incomingArchived.length, total: records.length };
   });
 }
 
@@ -247,16 +346,37 @@ async function setReducedMotion(value) {
   return { ok: true, settings };
 }
 
+async function setNotifyOnDue(value) {
+  const settings = { ...(await getSettings()), notifyOnDue: Boolean(value) };
+  await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+  if (!settings.notifyOnDue) {
+    await chrome.notifications.clear(DUE_NOTIFICATION_ID).catch(() => undefined);
+    await chrome.alarms.clear(QUIET_END_ALARM).catch(() => undefined);
+  }
+  return { ok: true, settings };
+}
+
+async function setQuietHours(value) {
+  const settings = { ...(await getSettings()), quietHours: normalizeQuietHours(value) };
+  await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
+  return { ok: true, settings };
+}
+
 export async function handleMessage(message) {
   if (!message || typeof message !== 'object') return { ok: false, error: '无效操作' };
   if (message.type === 'get-pet-state') {
     const [records, settings] = await Promise.all([getRecords(), getSettings()]);
-    const normalized = normalizeUrl(message.page.url);
+    const normalized = normalizeUrl(message.page.canonicalUrl || message.page.url);
     const currentRecord = records.find((item) => item.normalizedUrl === normalized) ?? null;
     const dueRecord = selectNextDue(records);
     const reviewMode = message.mode === 'review';
     const record = reviewMode ? (dueRecord ?? currentRecord) : currentRecord;
-    return { ok: true, record, currentRecord, dueRecord, isDue: Boolean(reviewMode && dueRecord), settings };
+    return {
+      ok: true, record, currentRecord, dueRecord,
+      isDue: Boolean(reviewMode && dueRecord),
+      canEncounter: Boolean(currentRecord && canAddEncounter(currentRecord)),
+      settings,
+    };
   }
   if (message.type === 'list-records') {
     const records = (await getRecords()).toSorted((a, b) => {
@@ -264,6 +384,10 @@ export async function handleMessage(message) {
       const bTime = b.stage === MAX_STAGE ? Infinity : b.nextReviewAt;
       return aTime - bTime || b.updatedAt - a.updatedAt;
     });
+    return { ok: true, records };
+  }
+  if (message.type === 'list-archived') {
+    const records = (await getArchivedRecords()).toSorted((a, b) => b.updatedAt - a.updatedAt);
     return { ok: true, records };
   }
   if (message.type === 'open-library') {
@@ -277,10 +401,16 @@ export async function handleMessage(message) {
   }
   if (message.type === 'mark-current') return markCurrent(message.tab);
   if (message.type === 'complete-review') return completeReview(message.normalizedUrl);
+  if (message.type === 'restart-journey') return restartJourney(message.normalizedUrl);
   if (message.type === 'remove-record') return removeRecord(message.normalizedUrl);
   if (message.type === 'change-url') return changeUrl(message.normalizedUrl, message.url);
+  if (message.type === 'archive-grown') return archiveGrown();
+  if (message.type === 'restore-record') return restoreArchived(message.normalizedUrl);
   if (message.type === 'set-reduced-motion') return setReducedMotion(message.value);
-  if (message.type === 'import-records') return importRecords(message.records);
+  if (message.type === 'get-settings') return { ok: true, settings: await getSettings() };
+  if (message.type === 'set-notify-on-due') return setNotifyOnDue(message.value);
+  if (message.type === 'set-quiet-hours') return setQuietHours(message.value);
+  if (message.type === 'import-records') return importRecords(message.records, message.archived);
   return { ok: false, error: '未知操作' };
 }
 
@@ -289,9 +419,23 @@ async function handleToolbarClick(tab) {
   await showPetOnTab(tab, selectNextDue(records) ? 'review' : 'current');
 }
 
+// 侧边栏入口：快捷键 open-side-panel。把当前页上下文写进 session 存储，
+// 让侧边栏知道该看哪一页；sidePanel.open 必须留在用户手势调用栈里。
+async function openSidePanel(tab) {
+  if (!Number.isInteger(tab?.windowId)) return;
+  const page = tab.url && isWebUrl(tab.url) ? { title: tab.title ?? '', url: tab.url } : null;
+  await chrome.storage.session.set({
+    [`entryContext:${tab.windowId}`]: { mode: 'current', page, openedAt: Date.now() },
+  });
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+}
+
 export async function handleCommand(command, tab) {
-  if (command !== 'open-current-document') return;
-  await showPetOnTab(tab, 'current');
+  if (command === 'open-current-document') {
+    await showPetOnTab(tab, 'current');
+    return;
+  }
+  if (command === 'open-side-panel') await openSidePanel(tab);
 }
 
 if (globalThis.chrome?.runtime?.onMessage) {
@@ -299,10 +443,25 @@ if (globalThis.chrome?.runtime?.onMessage) {
     handleMessage(message).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message || '操作失败，请重试' }));
     return true;
   });
-  chrome.runtime.onInstalled.addListener(async () => syncDerivedState(await getRecords()));
-  chrome.runtime.onStartup.addListener(async () => syncDerivedState(await getRecords()));
+  chrome.runtime.onInstalled.addListener(async () => {
+    await chrome.alarms.clear(LEGACY_REVIEW_ALARM); // 清理 1.0.x 时代的旧闹钟名
+    const migration = await migrateStoredRecords();
+    await syncDerivedState(migration.records);
+  });
+  chrome.runtime.onStartup.addListener(async () => {
+    const migration = await migrateStoredRecords();
+    await syncDerivedState(migration.records);
+    await maybeNotifyDue(migration.records).catch(() => undefined);
+  });
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === REVIEW_ALARM) syncDerivedState().catch(console.error);
+    if (alarm.name === REVIEW_ALARM || alarm.name === QUIET_END_ALARM) {
+      syncDerivedState()
+        .then(() => maybeNotifyDue())
+        .catch(console.error);
+    }
+  });
+  chrome.notifications?.onClicked.addListener(() => {
+    openNotifiedRecord();
   });
   chrome.storage.onChanged.addListener((_changes, areaName) => {
     if (areaName === 'local') requestBadgeRefresh();
@@ -311,9 +470,29 @@ if (globalThis.chrome?.runtime?.onMessage) {
     if (changeInfo.status === 'loading') clearTabInjectionError(tabId);
   });
   chrome.action.onClicked.addListener((tab) => {
-    handleToolbarClick(tab).catch((error) => console.warn('12730 pet injection failed', error));
+    handleToolbarClick(tab).catch((error) => console.warn('yidian pet injection failed', error));
   });
   chrome.commands.onCommand.addListener((command, tab) => {
-    handleCommand(command, tab).catch((error) => console.warn('12730 shortcut injection failed', error));
+    handleCommand(command, tab).catch((error) => console.warn('yidian shortcut injection failed', error));
+  });
+}
+async function migrateStoredRecords() {
+  return enqueueRecordsMutation(async () => {
+    const result = consolidateRecords(await getRawRecords());
+    if (result.changed) await saveRecords(result.records);
+    return result;
+  });
+}
+async function restartJourney(normalizedUrl) {
+  return enqueueRecordsMutation(async () => {
+    const records = await getRecords();
+    const index = records.findIndex((record) => record.normalizedUrl === normalizedUrl);
+    if (index < 0) return { ok: false, error: '\u8bb0\u5f55\u4e0d\u5b58\u5728' };
+    const record = restartRecord(records[index]);
+    const next = records.with(index, record);
+    await saveRecords(next);
+    await syncDerivedState(next);
+    await refreshInjectedPets().catch(() => undefined);
+    return { ok: true, record };
   });
 }

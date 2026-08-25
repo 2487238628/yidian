@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 
+const sharedSource = await readFile(new URL('../extension/shared.js', import.meta.url), 'utf8');
 const source = await readFile(new URL('../extension/pet.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../extension/pet.css', import.meta.url), 'utf8');
 
@@ -16,12 +17,12 @@ function declarationsFor(selector) {
   }));
 }
 
-const resetMatch = css.match(/#otter-12730-root,\s*#otter-12730-root \*\s*\{([^}]+)\}/);
+const resetMatch = css.match(/#otter-yidian-root,\s*#otter-yidian-root \*\s*\{([^}]+)\}/);
 const resetStyle = Object.fromEntries(resetMatch[1].split(';').map((item) => item.trim()).filter(Boolean).map((item) => {
   const index = item.indexOf(':');
   return [item.slice(0, index).trim(), item.slice(index + 1).replace(/!important/g, '').trim()];
 }));
-const petBaseStyle = declarationsFor('#otter-12730-pet');
+const petBaseStyle = declarationsFor('#otter-yidian-pet');
 
 class FakeClassList {
   values = new Set();
@@ -61,17 +62,17 @@ class FakeElement {
   closest(selector) { return selector === 'button[data-action]' && this.dataset.action ? this : null; }
   contains(element) { return element === this || this.children.has(element); }
   getBoundingClientRect() {
-    if (this.id === 'otter-12730-root') return { top: 0, left: 0, right: this.viewport.width, bottom: this.viewport.height, width: this.viewport.width, height: this.viewport.height };
+    if (this.id === 'otter-yidian-root') return { top: 0, left: 0, right: this.viewport.width, bottom: this.viewport.height, width: this.viewport.width, height: this.viewport.height };
     let left = 0;
     let top = 0;
     let width = this.offsetWidth;
     let height = this.offsetHeight;
-    if (this.id === 'otter-12730-pet') {
+    if (this.id === 'otter-yidian-pet') {
       left = Number.parseFloat(petBaseStyle.left) || 0;
       top = petBaseStyle.top?.startsWith('calc(100vh') ? this.viewport.height - 142 : Number.parseFloat(petBaseStyle.top) || 0;
       const match = String(this.style.transform || '').match(/translate3d\(([-\d.]+)px,([-\d.]+)px/);
       if (match) { left += Number(match[1]); top += Number(match[2]); }
-    } else if (this.id === 'otter-12730-card') {
+    } else if (this.id === 'otter-yidian-card') {
       left = Number.parseFloat(this.style.left) || 0;
       top = Number.parseFloat(this.style.top) || 0;
       width = Math.min(310, this.viewport.width - 24);
@@ -80,7 +81,7 @@ class FakeElement {
   }
 }
 
-function createHarness({ reducedMotion = false, record = null, due = false, selection = '' } = {}) {
+function createHarness({ reducedMotion = false, record = null, due = false, canEncounter = true, selection = '', canonicalUrl = '' } = {}) {
   const viewport = { width: 1280, height: 720 };
   const elements = new Map();
   const appended = [];
@@ -100,15 +101,16 @@ function createHarness({ reducedMotion = false, record = null, due = false, sele
     title: '初始标题',
     documentElement,
     getElementById(id) { return elements.get(id) ?? null; },
+    querySelector(selector) { return selector === 'link[rel="canonical"]' && canonicalUrl ? { href: canonicalUrl } : null; },
     createElement() {
       const root = new FakeElement('', viewport);
       Object.defineProperty(root, 'innerHTML', {
         set(value) {
           this._innerHTML = value;
-          for (const id of ['otter-12730-pet','otter-12730-card','otter-12730-toast','otter-12730-liquid']) {
+          for (const id of ['otter-yidian-pet','otter-yidian-card','otter-yidian-toast','otter-yidian-liquid']) {
             elements.set(id, new FakeElement(id, viewport));
           }
-          elements.get('otter-12730-card').hidden = true;
+          elements.get('otter-yidian-card').hidden = true;
         },
         get() { return this._innerHTML || ''; },
       });
@@ -125,7 +127,7 @@ function createHarness({ reducedMotion = false, record = null, due = false, sele
         sent.push(structuredClone(message));
         if (message.type === 'get-pet-state') return {
           ok: true, record, currentRecord: record, dueRecord: due ? record : null,
-          isDue: due, settings: { reducedMotion },
+          isDue: due, canEncounter, settings: { reducedMotion },
         };
         if (message.type === 'remove-record') return { ok: true, removed: true };
         if (message.type === 'mark-current') return { ok: true, created: true };
@@ -145,7 +147,7 @@ function createHarness({ reducedMotion = false, record = null, due = false, sele
     addEventListener() {}, matchMedia: () => ({ matches: false }),
     getComputedStyle(element) {
       const hostStyle = { margin: '64px', padding: '20px', opacity: '0.8', boxSizing: 'content-box', display: element.hidden ? 'none' : 'block', visibility: 'visible' };
-      if (element.id?.startsWith('otter-12730-')) {
+      if (element.id?.startsWith('otter-yidian-')) {
         return {
           ...hostStyle,
           margin: resetStyle.margin || hostStyle.margin,
@@ -157,8 +159,9 @@ function createHarness({ reducedMotion = false, record = null, due = false, sele
       return hostStyle;
     },
     structuredClone, console, Date, Intl,
-    __OTTER_12730_TEST_HOOK__(value) { hook = value; },
+    __YIDIAN_TEST_HOOK__(value) { hook = value; },
   });
+  vm.runInContext(sharedSource, context);
   vm.runInContext(source, context);
   return {
     context, document, location, chrome, elements, appended, runtimeListeners, sent, raf, viewport,
@@ -176,7 +179,7 @@ const record = {
 test('1280×720 宿主全局 div 干扰下宠物和卡片仍可见且位于视口内', async () => {
   const harness = createHarness();
   await harness.flush();
-  const root = harness.document.getElementById('otter-12730-root');
+  const root = harness.document.getElementById('otter-yidian-root');
   const { pet, card } = harness.hook;
   assert.ok(root, '宠物 root 应存在');
   const petRect = pet.getBoundingClientRect();
@@ -204,7 +207,7 @@ test('同一页面重复执行脚本只保留一个宠物', () => {
   const harness = createHarness();
   vm.runInContext(source, harness.context);
   assert.equal(harness.appended.length, 1);
-  assert.equal(harness.document.getElementById('otter-12730-root'), harness.appended[0]);
+  assert.equal(harness.document.getElementById('otter-yidian-root'), harness.appended[0]);
 });
 
 test('卡片展开和拖动期间暂停巡游，pointercancel 正确结束拖动', async () => {
@@ -291,6 +294,16 @@ test('选中文本会显示并随 Mark 保存为收藏上下文', async () => {
   const message = harness.sent.findLast((item) => item.type === 'mark-current');
   assert.equal(message.tab.excerpt, '一段值得再见的内容');
 });
+test('页面 canonical 链接会随 Mark 一起发送', async () => {
+  const harness = createHarness({ canonicalUrl: 'https://example.com/canonical' });
+  await harness.flush();
+  const button = new FakeElement('mark-button');
+  button.dataset.action = 'mark';
+  harness.hook.card.dispatch('click', { target: button });
+  await harness.flush();
+  assert.equal(harness.sent.findLast((item) => item.type === 'mark-current').tab.canonicalUrl, 'https://example.com/canonical');
+});
+
 
 test('工具栏 show-pet 消息会直接打开收藏卡片', async () => {
   const harness = createHarness();
@@ -300,17 +313,50 @@ test('工具栏 show-pet 消息会直接打开收藏卡片', async () => {
   listener({ type: 'show-pet', mode: 'current' });
   await harness.flush();
   assert.equal(harness.hook.card.hidden, false);
-  assert.match(harness.hook.card.innerHTML, /收下这条 · 第 1 次见面/);
+  assert.match(harness.hook.card.innerHTML, /共 4 步/);
+  assert.match(harness.hook.card.innerHTML, /收下 1 次，再回看 3 次/);
+  assert.doesNotMatch(harness.hook.card.innerHTML, /o-card-pet/);
+  assert.match(harness.hook.card.innerHTML, /这页，好像还想再见你/);
+  assert.match(harness.hook.card.innerHTML, />替我收好<\/button>/);
   assert.doesNotMatch(harness.hook.card.innerHTML, /完成 25%/);
 });
 
 test('到期卡片明确显示状态、进度和完成动作', async () => {
   const harness = createHarness({ record, due: true });
   await harness.flush();
-  assert.match(harness.hook.card.innerHTML, /今天待回看/);
-  assert.match(harness.hook.card.innerHTML, /相见进度 · 宠物 25%/);
+  assert.match(harness.hook.card.innerHTML, /它回来啦。今天再见一面/);
+  assert.match(harness.hook.card.innerHTML, /进度 1\/4/);
+  assert.match(harness.hook.card.innerHTML, /相见 1\/4/);
+  assert.match(harness.hook.card.innerHTML, /已收下 · 下一步是第 1 次回看/);
   assert.match(harness.hook.card.innerHTML, /完成这次回看/);
   assert.doesNotMatch(harness.hook.card.innerHTML, /这次回来了/);
+});
+
+test('未到期卡片由宠物说出具体到分钟的下次见面时间', async () => {
+  const harness = createHarness({ record });
+  await harness.flush();
+  assert.match(harness.hook.card.innerHTML, /我记得它。\d+月\d+日 \d{2}:\d{2}，再带回来/);
+});
+
+test('刚刚收下的当前页只确认已经记下', async () => {
+  const harness = createHarness({ record, canEncounter: false });
+  await harness.flush();
+  assert.ok(harness.hook.card.innerHTML.includes('<button class="o-primary" disabled>刚刚已经记下</button>'));
+  assert.doesNotMatch(harness.hook.card.innerHTML, /记下这次偶遇/);
+});
+
+test('已收藏的当前页把再次点击表达为途中偶遇', async () => {
+  const metRecord = {
+    ...record,
+    encounters: [
+      { type: 'saved', at: Date.now() - 86_400_000, stage: 1 },
+      { type: 'encounter', at: Date.now(), stage: 1 },
+    ],
+  };
+  const harness = createHarness({ record: metRecord });
+  await harness.flush();
+  assert.match(harness.hook.card.innerHTML, /记下这次偶遇/);
+  assert.match(harness.hook.card.innerHTML, /途中偶遇 <strong>1<\/strong> 次/);
 });
 
 test('卡片把删除移到记录页并提供全部记录入口', async () => {
